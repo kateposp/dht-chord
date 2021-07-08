@@ -4,6 +4,8 @@ import (
 	"net/rpc"
 )
 
+// Node is an individual entity/worker/machine
+// in the chord network.
 type Node struct {
 	// SHA-1 hash of ip address and port of a machine
 	// makes its id.
