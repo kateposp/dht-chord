@@ -13,9 +13,17 @@ func betweenRightInc(value, leftBound, rightBound []byte) bool {
 // Check if value is between left and right bound
 // (both bounds exclusive)
 func between(value, leftBound, rightBound []byte) bool {
-	if bytes.Compare(leftBound, value) == -1 &&
-		bytes.Compare(value, rightBound) == -1 {
+	switch bytes.Compare(leftBound, rightBound) {
+	case -1:
+		return bytes.Compare(leftBound, value) == -1 && bytes.Compare(value, rightBound) == -1
+
+	case 1:
+		return bytes.Compare(leftBound, value) == -1 || bytes.Compare(value, rightBound) == -1
+
+	case 0:
 		return true
+
+	default:
+		return false
 	}
-	return false
 }
