@@ -34,7 +34,7 @@ type Node struct {
 	store dataStore
 }
 
-// Each finger represents the node with is
+// Each ith finger represents the node with is
 // atleast at a distance of 2^(i - 1) from
 // current node
 type Finger struct {
