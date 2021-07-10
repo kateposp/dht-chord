@@ -16,6 +16,9 @@ type Node struct {
 	// i.e. for example 10.0.0.1:9988
 	address string
 
+	// rpc client of this node
+	self *rpc.Client
+
 	// predecessor is the rpc client type of the first
 	// node in anti-clockwise direction from current
 	// node. i.e. the node just before current node
