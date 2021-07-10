@@ -49,3 +49,32 @@ type Finger struct {
 // dataStore is an alias to map data structure
 // with string type keys and string type values
 type dataStore map[string]string
+
+// Successor method find the successor of given id.
+// Successor node of id N is the first node whose id is
+// either equal to N or follows N (in clockwise fashnion).
+func (node *Node) Successor(id []byte, rpcClient *rpc.Client) error {
+	if betweenRightInc(id, node.id, node.fingerTable[0].id) {
+		*rpcClient = *node.fingerTable[0].node
+		return nil
+	}
+
+	*rpcClient = node.closest_preceeding_node(id)
+	return nil
+}
+
+// Find the node closest to the given id with the help
+// of current node's finger table
+func (node *Node) closest_preceeding_node(id []byte) rpc.Client {
+	fingerIndex := len(node.fingerTable) - 1
+
+	for ; fingerIndex >= 0; fingerIndex-- {
+		finger := node.fingerTable[fingerIndex]
+
+		if between(id, node.id, finger.id) {
+			return *finger.node
+		}
+	}
+
+	return *node.self
+}
