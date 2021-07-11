@@ -9,3 +9,8 @@ func (data dataStore) set(key, value string) {
 	data[key] = value
 }
 
+// Return the value associated with the given key
+func (data dataStore) get(key string) string {
+	return data[key]
+}
+
