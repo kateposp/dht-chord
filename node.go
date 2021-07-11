@@ -46,10 +46,6 @@ type Finger struct {
 	node *rpc.Client
 }
 
-// dataStore is an alias to map data structure
-// with string type keys and string type values
-type dataStore map[string]string
-
 // Successor method find the successor of given id.
 // Successor node of id N is the first node whose id is
 // either equal to N or follows N (in clockwise fashnion).
