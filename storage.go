@@ -14,3 +14,7 @@ func (data dataStore) get(key string) string {
 	return data[key]
 }
 
+// Delete key-value pair
+func (data dataStore) del(key string) {
+	delete(data, key)
+}
