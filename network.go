@@ -23,14 +23,14 @@ func createNewNode(address string) (*Node, error) {
 	rpc.HandleHTTP()
 	l, err := net.Listen("tcp", address)
 	if err != nil {
-		return nil, LISTEN_ERROR
+		return nil, ErrUnableToListen
 	}
 
 	go http.Serve(l, nil)
 
 	client, err := rpc.DialHTTP("tpc", address)
 	if err != nil {
-		return nil, DIALING_ERROR
+		return nil, ErrUnableToDial
 	}
 
 	node.self = client
