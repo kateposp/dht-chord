@@ -12,10 +12,11 @@ func createNewNode(address string) (*Node, error) {
 	h.Write([]byte(address))
 
 	node := &Node{
-		id:          h.Sum(nil),
-		address:     address,
-		predecessor: nil,
-		fingerTable: nil,
+		id:             h.Sum(nil),
+		address:        address,
+		predecessorId:  nil,
+		predecessorRPC: nil,
+		fingerTable:    nil,
 	}
 
 	rpc.Register(node)
