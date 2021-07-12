@@ -25,6 +25,9 @@ type Node struct {
 	// in circular fashion.
 	predecessorRPC *rpc.Client
 
+	// Stores id of predecessor node
+	predecessorId []byte
+
 	// fingerTable contains the list of fingers
 	// associated with a node.
 	fingerTable []*Finger
