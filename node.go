@@ -2,6 +2,7 @@ package chord
 
 import (
 	"net/rpc"
+	"time"
 )
 
 // Node is an individual entity/worker/machine
