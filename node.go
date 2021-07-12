@@ -87,3 +87,9 @@ func (node *Node) Notify(n *Node, _ *int) error {
 	return nil
 }
 
+// Function to check if RPC server is responding
+func (node *Node) Check(arg *string, reply *string) error {
+	*reply = "Acknowledged"
+	return nil
+}
+
