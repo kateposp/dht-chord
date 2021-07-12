@@ -23,7 +23,7 @@ type Node struct {
 	// node in anti-clockwise direction from current
 	// node. i.e. the node just before current node
 	// in circular fashion.
-	predecessor *rpc.Client
+	predecessorRPC *rpc.Client
 
 	// fingerTable contains the list of fingers
 	// associated with a node.
