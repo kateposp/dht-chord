@@ -94,3 +94,18 @@ func (node *Node) Check(arg *string, reply *string) error {
 	return nil
 }
 
+// Check if predecessor has failed or not
+func (node *Node) checkPredecessor() error {
+	var reply string
+	callReply := node.predecessorRPC.Go("Node.Check", "Hello", &reply, nil)
+
+	select {
+	case <-callReply.Done:
+		if reply != "Acknowledged" {
+			return ErrFailedToReach
+		}
+	case <-time.NewTimer(5 * time.Second).C:
+		return ErrFailedToReach
+	}
+	return nil
+}
