@@ -7,7 +7,7 @@ import (
 	"net/rpc"
 )
 
-func createNewNode(address string) (*Node, error) {
+func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	h := sha1.New()
 	h.Write([]byte(address))
 
