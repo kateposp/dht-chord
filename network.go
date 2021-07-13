@@ -16,7 +16,6 @@ func createNewNode(address string) (*Node, error) {
 		address:        address,
 		predecessorId:  nil,
 		predecessorRPC: nil,
-		fingerTable:    nil,
 	}
 
 	rpc.Register(node)
@@ -35,5 +34,6 @@ func createNewNode(address string) (*Node, error) {
 
 	node.self = client
 
+	node.fingerTable = append(node.fingerTable, &Finger{node.id, node.self})
 	return node, nil
 }
