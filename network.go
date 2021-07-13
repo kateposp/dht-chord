@@ -35,5 +35,12 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	node.self = client
 
 	node.fingerTable = append(node.fingerTable, &Finger{node.id, node.self})
+
+	if joinNodeAddr == "" {
+		return node, nil
+	}
+
+	return nil, nil
+
 	return node, nil
 }
