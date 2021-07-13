@@ -109,3 +109,8 @@ func (node *Node) checkPredecessor() error {
 	}
 	return nil
 }
+
+func (node *Node) GetId(_ *string, id *[]byte) error {
+	*id = node.id
+	return nil
+}
