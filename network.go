@@ -40,7 +40,19 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 		return node, nil
 	}
 
-	return nil, nil
+	joinNodeClient, err := rpc.DialHTTP("tcp", joinNodeAddr)
+	if err != nil {
+		return nil, ErrUnableToDial
+	}
+
+	var successor rpc.Client
+	joinNodeClient.Call("Node.Successor", node.id, &successor)
+
+	var successorId []byte
+	successor.Call("Node.GetId", "", &successorId)
+
+	node.fingerTable[0] = &Finger{successorId, &successor}
+	successor.Call("Node.Notify", &node, "")
 
 	return node, nil
 }
