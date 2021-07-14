@@ -198,3 +198,22 @@ func (node *Node) GetPredecessor(_ *string, reply *rpc.Client) error {
 	return nil
 }
 
+// get current successor's predecessor node
+// (this might not be same as the node calling this function
+// i.e the current node)
+// and check if it is better suited to be the successor
+// of current node.
+func (node *Node) stabilize() {
+	var x rpc.Client
+	node.fingerTable[0].node.Call("Node.GetPredecessor", "", &x)
+
+	var xId []byte
+	x.Call("Node.GetId", "", &xId)
+
+	if between(xId, node.id, node.fingerTable[0].id) {
+		node.fingerTable[0].node = &x
+		node.fingerTable[0].id = xId
+	}
+
+	x.Call("Node.Notify", &node, "")
+}
