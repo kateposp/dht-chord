@@ -138,6 +138,9 @@ func (node *Node) checkPredecessor() error {
 
 // Fixes i th finger
 func (node *Node) fixFinger(i int) {
+	// find successor of i th offset and
+	// set it as i th finger of current node
+
 	fingerId := fingerId(node.id, i)
 	var successor rpc.Client
 	node.Successor(fingerId, &successor)
