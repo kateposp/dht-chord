@@ -7,7 +7,7 @@ import (
 // Check if value is between left and right bound
 // (right bound inclusive)
 func betweenRightInc(value, leftBound, rightBound []byte) bool {
-	return bytes.Equal(value, rightBound) || between(value, leftBound, rightBound)
+	return equal(value, rightBound) || between(value, leftBound, rightBound)
 }
 
 // Check if value is between left and right bound
