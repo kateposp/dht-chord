@@ -2,6 +2,7 @@ package chord
 
 import (
 	"bytes"
+	"crypto/sha1"
 )
 
 // Check if value is between left and right bound
@@ -31,4 +32,12 @@ func between(value, leftBound, rightBound []byte) bool {
 // Check if two byte slices are equal
 func equal(valOne, valTwo []byte) bool {
 	return bytes.Equal(valOne, valTwo)
+}
+
+// create []byte of string by hashing it
+// using sha1
+func getHash(str string) []byte {
+	h := sha1.New()
+	h.Write([]byte(str))
+	return h.Sum(nil)
 }
