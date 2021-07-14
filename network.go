@@ -51,6 +51,10 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	var successorId []byte
 	successor.Call("Node.GetId", "", &successorId)
 
+	if equal(successorId, node.id) {
+		return nil, ErrNodeAlreadyExists
+	}
+
 	node.fingerTable[0] = &Finger{successorId, &successor}
 	successor.Call("Node.Notify", &node, "")
 
