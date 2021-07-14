@@ -27,3 +27,8 @@ func between(value, leftBound, rightBound []byte) bool {
 		return false
 	}
 }
+
+// Check if two byte slices are equal
+func equal(valOne, valTwo []byte) bool {
+	return bytes.Equal(valOne, valTwo)
+}
