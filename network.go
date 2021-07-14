@@ -1,20 +1,18 @@
 package chord
 
 import (
-	"crypto/sha1"
 	"net"
 	"net/http"
 	"net/rpc"
 )
 
 func createNewNode(address string, joinNodeAddr string) (*Node, error) {
-	// create []byte from address using sha1
-	h := sha1.New()
-	h.Write([]byte(address))
+
+	id := getHash(address)
 
 	// Initialize node
 	node := &Node{
-		id:             h.Sum(nil),
+		id:             id,
 		address:        address,
 		predecessorId:  nil,
 		predecessorRPC: nil,
