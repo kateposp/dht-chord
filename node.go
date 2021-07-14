@@ -86,6 +86,10 @@ func (node *Node) Successor(id []byte, rpcClient *rpc.Client) error {
 func (node *Node) closest_preceeding_node(id []byte) rpc.Client {
 	fingerIndex := len(node.fingerTable) - 1
 
+	// Go through finger table from last entry
+	// to first and return the first finger that
+	// fulfills the criteria:
+	// finger.id ɛ (node.id, id)
 	for ; fingerIndex >= 0; fingerIndex-- {
 		finger := node.fingerTable[fingerIndex]
 
@@ -94,6 +98,8 @@ func (node *Node) closest_preceeding_node(id []byte) rpc.Client {
 		}
 	}
 
+	// If no such finger is found return
+	// the current node
 	return *node.self
 }
 
