@@ -105,6 +105,8 @@ func (node *Node) closest_preceeding_node(id []byte) rpc.Client {
 
 // Check if 'n' is the predecessor of 'node'
 func (node *Node) Notify(n *Node, _ *string) error {
+	// if predecessor is nil or if n ɛ (current predecessor, node)
+	// set it as predecessor
 	if node.predecessorId == nil || between(n.id, node.predecessorId, node.id) {
 		node.predecessorRPC = n.self
 		node.predecessorId = n.id
