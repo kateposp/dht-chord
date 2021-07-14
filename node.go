@@ -122,6 +122,19 @@ func (node *Node) checkPredecessor() error {
 	return nil
 }
 
+// Fixes i th finger
+func (node *Node) fixFinger(i int) {
+	fingerId := fingerId(node.id, i)
+	var successor rpc.Client
+	node.Successor(fingerId, &successor)
+
+	var successorId []byte
+	successor.Call("Node.GetId", "", &successorId)
+
+	node.fingerTable[i].id = successorId
+	node.fingerTable[i].node = &successor
+}
+
 // Returns the id (type []byte) of i th finger of node
 //
 // i th finger is at an offset of 2^(i - 1) from node
