@@ -122,6 +122,40 @@ func (node *Node) checkPredecessor() error {
 	return nil
 }
 
+// Returns the id (type []byte) of i th finger of node
+//
+// i th finger is at an offset of 2^(i - 1) from node
+// in circular fashion.
+//
+// hence equation = {n + 2^(i -1)} mod (2^m)
+// where m is the number of bits in hash
+func fingerId(n []byte, i int) []byte {
+	// Number of bits in sha1 hash
+	m := 160
+
+	// Convert the ID to a bigint
+	idInt := (&big.Int{}).SetBytes(n)
+
+	// Get the offset
+	two := big.NewInt(2)
+	offset := big.Int{}
+	offset.Exp(two, big.NewInt(int64(i)), nil)
+
+	// Sum
+	sum := big.Int{}
+	sum.Add(idInt, &offset)
+
+	// Get the ceiling
+	ceil := big.Int{}
+	ceil.Exp(two, big.NewInt(int64(m)), nil)
+
+	// Apply the mod
+	idInt.Mod(&sum, &ceil)
+
+	// Add together
+	return idInt.Bytes()
+}
+
 // Return the id of the node
 func (node *Node) GetId(_ *string, id *[]byte) error {
 	*id = node.id
