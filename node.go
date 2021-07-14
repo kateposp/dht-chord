@@ -55,6 +55,8 @@ type Finger struct {
 // Successor node of id N is the first node whose id is
 // either equal to N or follows N (in clockwise fashnion).
 func (node *Node) Successor(id []byte, rpcClient *rpc.Client) error {
+	// If the id is between node and its successor
+	// then return the successor
 	if betweenRightInc(id, node.id, node.fingerTable[0].id) {
 		*rpcClient = *node.fingerTable[0].node
 		return nil
@@ -65,9 +67,13 @@ func (node *Node) Successor(id []byte, rpcClient *rpc.Client) error {
 	pred.Call("Node.GetId", "", predId)
 
 	if equal(node.id, predId) {
-		*rpcClient = pred
+		// If the closest preceeding node and
+		// current node are same, return pred
+		*rpcClient = pred // or *rpcClient = node.self
 		return nil
 	} else {
+		// If they are different, call Successor funtion
+		// on pred and return its result
 		var newRpc rpc.Client
 		pred.Call("Node.Successor", id, &newRpc)
 		*rpcClient = newRpc
