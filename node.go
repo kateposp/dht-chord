@@ -59,8 +59,19 @@ func (node *Node) Successor(id []byte, rpcClient *rpc.Client) error {
 		return nil
 	}
 
-	*rpcClient = node.closest_preceeding_node(id)
-	return nil
+	pred := node.closest_preceeding_node(id)
+	var predId []byte
+	pred.Call("Node.GetId", "", predId)
+
+	if equal(node.id, predId) {
+		*rpcClient = pred
+		return nil
+	} else {
+		var newRpc rpc.Client
+		pred.Call("Node.Successor", id, &newRpc)
+		*rpcClient = newRpc
+		return nil
+	}
 }
 
 // Find the node closest to the given id with the help
@@ -71,7 +82,7 @@ func (node *Node) closest_preceeding_node(id []byte) rpc.Client {
 	for ; fingerIndex >= 0; fingerIndex-- {
 		finger := node.fingerTable[fingerIndex]
 
-		if between(id, node.id, finger.id) {
+		if between(finger.id, node.id, id) {
 			return *finger.node
 		}
 	}
