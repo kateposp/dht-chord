@@ -110,6 +110,7 @@ func (node *Node) checkPredecessor() error {
 	return nil
 }
 
+// Return the id of the node
 func (node *Node) GetId(_ *string, id *[]byte) error {
 	*id = node.id
 	return nil
