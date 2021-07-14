@@ -191,3 +191,10 @@ func (node *Node) GetId(_ *string, id *[]byte) error {
 	*id = node.id
 	return nil
 }
+
+// Returns predecessor of a node
+func (node *Node) GetPredecessor(_ *string, reply *rpc.Client) error {
+	*reply = *node.predecessorRPC
+	return nil
+}
+
