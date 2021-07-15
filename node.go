@@ -155,6 +155,10 @@ func (node *Node) fixFinger(i int) {
 	var successorId []byte
 	successor.Call("Node.GetId", "", &successorId)
 
+	if node.fingerTable[i] == nil {
+		node.fingerTable[i] = new(Finger)
+	}
+
 	node.fingerTable[i].id = successorId
 	node.fingerTable[i].node = &successor
 }
