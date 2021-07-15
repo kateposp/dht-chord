@@ -2,6 +2,7 @@ package chord
 
 import (
 	"math/big"
+	"net"
 	"net/rpc"
 	"time"
 )
@@ -20,6 +21,9 @@ type Node struct {
 
 	// rpc client of this node
 	self *rpc.Client
+
+	// listener for rpc server
+	listener net.Listener
 
 	// predecessor is the rpc client type of the first
 	// node in anti-clockwise direction from current
