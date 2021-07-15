@@ -43,6 +43,22 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// aren't any other nodes in the network
 	node.fingerTable = append(node.fingerTable, &Finger{node.id, node.self})
 
+	// prediodically stablize the node
+	defer func() {
+		go func() {
+			ticker := time.NewTicker(2 * time.Second)
+			for {
+				select {
+				case <-ticker.C:
+					node.stabilize()
+				case <-node.exitCh:
+					ticker.Stop()
+					return
+				}
+			}
+		}()
+	}()
+
 	// empty join address means new network
 	// hence return the new node
 	if joinNodeAddr == "" {
