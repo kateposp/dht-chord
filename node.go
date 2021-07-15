@@ -280,7 +280,7 @@ func (node *Node) stop() {
 	var successor rpc.Client = *node.fingerTable[0].node
 	node.self.Call("Node.TransferData", &successor, "")
 
-	node.predecessorRPC.Call("Node.SetSuccessor", &successor, "")
+	node.predecessorRPC.Go("Node.SetSuccessor", &successor, "", nil)
 
 	node.self.Close()
 }
