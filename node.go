@@ -144,7 +144,7 @@ func (node *Node) checkPredecessor() error {
 }
 
 // Fixes i th finger
-func (node *Node) fixFinger(i int) {
+func (node *Node) fixFinger(i int) int {
 	// find successor of i th offset and
 	// set it as i th finger of current node
 
@@ -161,6 +161,8 @@ func (node *Node) fixFinger(i int) {
 
 	node.fingerTable[i].id = successorId
 	node.fingerTable[i].node = &successor
+
+	return i + 1
 }
 
 // Returns the id (type []byte) of i th finger of node
