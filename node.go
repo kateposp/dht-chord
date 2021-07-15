@@ -217,3 +217,11 @@ func (node *Node) stabilize() {
 
 	x.Call("Node.Notify", &node, "")
 }
+
+func (node *Node) SetData(data *dataStore, _ *string) error {
+	for key, value := range *data {
+		node.store.set(key, value)
+	}
+	return nil
+}
+
