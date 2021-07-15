@@ -43,6 +43,25 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// aren't any other nodes in the network
 	node.fingerTable = append(node.fingerTable, &Finger{node.id, node.self})
 
+	// prediodically check if predecessor has failed
+	defer func() {
+		go func() {
+			ticker := time.NewTicker(10 * time.Second)
+			for {
+				select {
+				case <-ticker.C:
+					err := node.checkPredecessor()
+					if err != nil {
+						fmt.Println("Predecessor has failed")
+					}
+				case <-node.exitCh:
+					ticker.Stop()
+					return
+				}
+			}
+		}()
+	}()
+
 	// prediodically fix finger table
 	defer func() {
 		go func() {
