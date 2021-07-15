@@ -10,8 +10,9 @@ func (data dataStore) set(key, value string) {
 }
 
 // Return the value associated with the given key
-func (data dataStore) get(key string) string {
-	return data[key]
+func (data dataStore) get(key string) (string, bool) {
+	value, ok := data[key]
+	return value, ok
 }
 
 // Delete key-value pairs
