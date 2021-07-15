@@ -283,4 +283,5 @@ func (node *Node) stop() {
 	node.predecessorRPC.Go("Node.SetSuccessor", &successor, "", nil)
 
 	node.self.Close()
+	node.listener.Close()
 }
