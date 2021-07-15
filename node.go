@@ -259,6 +259,9 @@ func (node *Node) SetSuccessor(successor *rpc.Client, _ *string) error {
 	node.fingerTable[0].id = successorId
 	node.fingerTable[0].node = successor
 
+	return nil
+}
+
 func (node *Node) SetPredecessor(pred *rpc.Client, _ *string) error {
 	var predId []byte
 	pred.Call("Node.GetId", &predId, "")
@@ -275,8 +278,10 @@ func (node *Node) SetPredecessor(pred *rpc.Client, _ *string) error {
 func (node *Node) stop() {
 	successor := *node.fingerTable[0].node
 	node.self.Call("Node.TransferData", &successor, "")
-
 	node.predecessorRPC.Go("Node.SetSuccessor", &successor, "", nil)
+
+	myPred := *node.predecessorRPC
+	node.fingerTable[0].node.Go("Node.SetPredecessor", &myPred, "", nil)
 
 	node.self.Close()
 	node.listener.Close()
