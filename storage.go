@@ -21,3 +21,17 @@ func (data dataStore) del(keys []string) {
 		delete(data, key)
 	}
 }
+
+func (data dataStore) getTransferRange(left, right []byte) ([]string, dataStore) {
+	delKeys := make([]string, 1)
+	transfer := make(dataStore)
+
+	for key, value := range data {
+		if betweenRightInc(getHash(key), left, right) {
+			delKeys = append(delKeys, key)
+			transfer[key] = value
+		}
+	}
+
+	return delKeys, transfer
+}
