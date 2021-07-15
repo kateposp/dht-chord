@@ -267,3 +267,16 @@ func (node *Node) SetSuccessor(successor *rpc.Client, _ *string) error {
 	return nil
 }
 
+// This method is called when node is leaving the
+// chord network. It does the following tasks
+// 	1.transfers its keys to its successor
+// 	2.connect its predecessor and successor to
+// 	  each other
+func (node *Node) stop() {
+	var successor rpc.Client = *node.fingerTable[0].node
+	node.self.Call("Node.TransferData", &successor, "")
+
+	node.predecessorRPC.Call("Node.SetSuccessor", &successor, "")
+
+	node.self.Close()
+}
