@@ -259,15 +259,11 @@ func (node *Node) SetSuccessor(successor *rpc.Client, _ *string) error {
 	node.fingerTable[0].id = successorId
 	node.fingerTable[0].node = successor
 
-	defer func() {
-		// on the routine predecessor check
-		// successor will note that its old
-		// predecessor isn't alive, then this
-		// node will notify successor to make
-		// it its predecessor
-		time.Sleep(5 * time.Second)
-		successor.Call("Node.Notify", &node, "")
-	}()
+func (node *Node) SetPredecessor(pred *rpc.Client, _ *string) error {
+	var predId []byte
+	pred.Call("Node.GetId", &predId, "")
+	node.predecessorId = predId
+	node.predecessorRPC = pred
 	return nil
 }
 
