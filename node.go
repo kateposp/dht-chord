@@ -233,3 +233,8 @@ func (node *Node) GetValue(key *string, value *string) error {
 	}
 	return nil
 }
+
+func (node *Node) deleteKeys(keys []string) {
+	node.store.del(keys)
+}
+
