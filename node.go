@@ -41,6 +41,9 @@ type Node struct {
 	// store stores the key-value pairs assigned to
 	// the node.
 	store dataStore
+
+	// channel to indicate node is exiting
+	exitCh chan struct{}
 }
 
 // Each ith finger represents the node with is
