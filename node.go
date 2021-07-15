@@ -225,3 +225,11 @@ func (node *Node) SetData(data *dataStore, _ *string) error {
 	return nil
 }
 
+func (node *Node) GetValue(key *string, value *string) error {
+	var ok bool
+	*value, ok = node.store.get(*key)
+	if !ok {
+		return ErrNoKeyValuePair
+	}
+	return nil
+}
