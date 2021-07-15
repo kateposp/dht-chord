@@ -43,6 +43,26 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// aren't any other nodes in the network
 	node.fingerTable = append(node.fingerTable, &Finger{node.id, node.self})
 
+	// prediodically fix finger table
+	defer func() {
+		go func() {
+			fingerIndex := 0
+			ticker := time.NewTicker(100 * time.Millisecond)
+			for {
+				select {
+				case <-ticker.C:
+					if fingerIndex > 30 {
+						fingerIndex = 0
+					}
+					fingerIndex = node.fixFinger(fingerIndex)
+				case <-node.exitCh:
+					ticker.Stop()
+					return
+				}
+			}
+		}()
+	}()
+
 	// prediodically stablize the node
 	defer func() {
 		go func() {
