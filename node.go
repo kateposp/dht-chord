@@ -281,6 +281,7 @@ func (node *Node) SetPredecessor(pred *rpc.Client, _ *string) error {
 // 	2.connect its predecessor and successor to
 // 	  each other
 func (node *Node) stop() {
+	close(node.exitCh)
 	successor := *node.fingerTable[0].node
 	node.self.Call("Node.TransferData", &successor, "")
 	node.predecessorRPC.Go("Node.SetSuccessor", &successor, "", nil)
