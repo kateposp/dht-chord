@@ -263,6 +263,7 @@ func (node *Node) SetSuccessor(successor *rpc.Client, _ *string) error {
 	return nil
 }
 
+// manually set predecessor of node
 func (node *Node) SetPredecessor(pred *rpc.Client, _ *string) error {
 	var predId []byte
 	pred.Call("Node.GetId", &predId, "")
