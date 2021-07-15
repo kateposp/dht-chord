@@ -253,6 +253,7 @@ func (node *Node) TransferData(to *rpc.Client, _ *string) error {
 	return nil
 }
 
+// manually set successor of node
 func (node *Node) SetSuccessor(successor *rpc.Client, _ *string) error {
 	var successorId []byte
 	successor.Call("Node.GetId", "", &successorId)
