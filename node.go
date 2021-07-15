@@ -238,3 +238,13 @@ func (node *Node) deleteKeys(keys []string) {
 	node.store.del(keys)
 }
 
+func (node *Node) TransferData(to *rpc.Client, _ *string) error {
+	var toId []byte
+	to.Call("Node.GetId", "", &toId)
+	delKeys, transfer := node.store.getTransferRange(node.predecessorId, toId)
+
+	to.Call("Node.SetData", &transfer, "")
+	node.deleteKeys(delKeys)
+
+	return nil
+}
