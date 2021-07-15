@@ -21,11 +21,13 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// start rpc server for node
 	rpc.Register(node)
 	rpc.HandleHTTP()
-	l, err := net.Listen("tcp", address)
+
+	var err error
+	node.listener, err = net.Listen("tcp", address)
 	if err != nil {
 		return nil, ErrUnableToListen
 	}
-	go http.Serve(l, nil)
+	go http.Serve(node.listener, nil)
 
 	// create rpc client for node
 	client, err := rpc.DialHTTP("tpc", address)
