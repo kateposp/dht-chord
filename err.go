@@ -7,4 +7,5 @@ var (
 	ErrUnableToDial      = errors.New("error: unable to dial the address of rpc server")
 	ErrFailedToReach     = errors.New("error: unable to reach rpc server")
 	ErrNodeAlreadyExists = errors.New("error: node with same id already exists")
+	ErrNoKeyValuePair    = errors.New("error: key value pair not found")
 )
