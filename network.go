@@ -32,7 +32,7 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	go http.Serve(node.listener, nil)
 
 	// create rpc client for node
-	client, err := rpc.DialHTTP("tpc", address)
+	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		return nil, ErrUnableToDial
 	}
