@@ -227,7 +227,6 @@ func (node *Node) GetPredecessor(_ *string, reply *rpc.Client) error {
 // and check if it is better suited to be the successor
 // of current node.
 func (node *Node) stabilize() {
-	var x rpc.Client
 	successor := node.fingerTable[0].node
 
 	// current node is only node in the network
@@ -235,6 +234,7 @@ func (node *Node) stabilize() {
 		return
 	}
 
+	var x rpc.Client
 	err := successor.Call("Node.GetPredecessor", "", &x)
 	// our successor does not know we are its predecessor
 	if err == ErrNilPredecessor {
