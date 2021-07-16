@@ -53,7 +53,7 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 				case <-ticker.C:
 					err := node.checkPredecessor()
 					if err != nil {
-						fmt.Println("Predecessor has failed")
+						fmt.Println(err)
 					}
 				case <-node.exitCh:
 					ticker.Stop()
