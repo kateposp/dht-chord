@@ -8,4 +8,5 @@ var (
 	ErrFailedToReach     = errors.New("error: unable to reach rpc server")
 	ErrNodeAlreadyExists = errors.New("error: node with same id already exists")
 	ErrNoKeyValuePair    = errors.New("error: key value pair not found")
+	ErrNilPredecessor    = errors.New("error: predecessor does not exists")
 )
