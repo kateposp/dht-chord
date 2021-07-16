@@ -131,5 +131,7 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// be its predecessor
 	successor.Call("Node.Notify", &node, "")
 
+	// get appropriate data from successor
+	successor.Call("Node.TransferData", node.self, "")
 	return node, nil
 }
