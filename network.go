@@ -72,7 +72,7 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 			for {
 				select {
 				case <-ticker.C:
-					if fingerIndex > 30 {
+					if fingerIndex >= 30 {
 						fingerIndex = 0
 					}
 					fingerIndex = node.fixFinger(fingerIndex)
