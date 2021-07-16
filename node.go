@@ -129,8 +129,13 @@ func (node *Node) Check(arg *string, reply *string) error {
 
 // Check if predecessor has failed or not
 func (node *Node) checkPredecessor() error {
+	myPred := node.predecessorRPC
 	var reply string
-	callReply := node.predecessorRPC.Go("Node.Check", "Hello", &reply, nil)
+	if myPred == nil {
+		return ErrNilPredecessor
+	}
+
+	callReply := myPred.Go("Node.Check", "Hello", &reply, nil)
 
 	select {
 	case <-callReply.Done:
@@ -138,6 +143,8 @@ func (node *Node) checkPredecessor() error {
 			return ErrFailedToReach
 		}
 	case <-time.NewTimer(5 * time.Second).C:
+		node.predecessorId = nil
+		node.predecessorRPC = nil
 		return ErrFailedToReach
 	}
 	return nil
