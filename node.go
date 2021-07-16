@@ -221,7 +221,19 @@ func (node *Node) GetPredecessor(_ *string, reply *rpc.Client) error {
 // of current node.
 func (node *Node) stabilize() {
 	var x rpc.Client
-	node.fingerTable[0].node.Call("Node.GetPredecessor", "", &x)
+	successor := node.fingerTable[0].node
+
+	// current node is only node in the network
+	if successor == node.self {
+		return
+	}
+
+	err := successor.Call("Node.GetPredecessor", "", &x)
+	// our successor does not know we are its predecessor
+	if err == ErrNilPredecessor {
+		successor.Call("Node.Notify", &node, "")
+		return
+	}
 
 	var xId []byte
 	x.Call("Node.GetId", "", &xId)
