@@ -48,7 +48,7 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// prediodically check if predecessor has failed
 	defer func() {
 		go func() {
-			ticker := time.NewTicker(10 * time.Second)
+			ticker := time.NewTicker(5 * time.Second)
 			for {
 				select {
 				case <-ticker.C:
