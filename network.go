@@ -18,6 +18,7 @@ func createNewNode(address string, joinNodeAddr string) (*Node, error) {
 		address:        address,
 		predecessorId:  nil,
 		predecessorRPC: nil,
+		exitCh:         make(chan struct{}),
 	}
 
 	// start rpc server for node
