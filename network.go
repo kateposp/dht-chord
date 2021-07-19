@@ -9,6 +9,7 @@ import (
 )
 
 func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
+	skipDefer := false
 
 	id := getHash(address)
 
@@ -28,6 +29,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	var err error
 	node.listener, err = net.Listen("tcp", address)
 	if err != nil {
+		skipDefer = true
 		return nil, ErrUnableToListen
 	}
 	go http.Serve(node.listener, nil)
@@ -35,6 +37,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// create rpc client for node
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
+		skipDefer = true
 		return nil, ErrUnableToDial
 	}
 	node.self = client
@@ -47,6 +50,9 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	// prediodically check if predecessor has failed
 	defer func() {
+		if skipDefer {
+			return
+		}
 		go func() {
 			ticker := time.NewTicker(5 * time.Second)
 			for {
@@ -66,6 +72,9 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	// prediodically fix finger table
 	defer func() {
+		if skipDefer {
+			return
+		}
 		go func() {
 			fingerIndex := 0
 			ticker := time.NewTicker(100 * time.Millisecond)
@@ -86,6 +95,9 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	// prediodically stablize the node
 	defer func() {
+		if skipDefer {
+			return
+		}
 		go func() {
 			ticker := time.NewTicker(2 * time.Second)
 			for {
@@ -111,6 +123,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	joinNodeClient, err := rpc.DialHTTP("tcp", joinNodeAddr)
 	if err != nil {
+		skipDefer = true
 		return nil, ErrUnableToDial
 	}
 
