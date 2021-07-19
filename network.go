@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func createNewNode(address string, joinNodeAddr string) (*Node, error) {
+func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	id := getHash(address)
 
