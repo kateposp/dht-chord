@@ -47,7 +47,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// successor of node is node itself if there
 	// aren't any other nodes in the network
 	node.fingerTable = make([]*Finger, 30)
-	node.fingerTable[0] = &Finger{node.id, node.self}
+	node.fingerTable[0] = &Finger{node.id, &node.address}
 
 	// prediodically check if predecessor has failed
 	defer func() {
