@@ -129,11 +129,12 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	}
 
 	// find appropriate successor of new node
-	var successor rpc.Client
-	joinNodeClient.Call("Node.Successor", node.id, &successor)
+	var successorAddr string
+	joinNodeClient.Call("Node.Successor", node.id, &successorAddr)
 
+	successorRPC, _ := getClient(&successorAddr)
 	var successorId []byte
-	successor.Call("Node.GetId", "", &successorId)
+	successorRPC.Call("Node.GetId", "", &successorId)
 
 	if equal(successorId, node.id) {
 		return nil, ErrNodeAlreadyExists
@@ -141,13 +142,13 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	// update first finger to point to successor
 	node.fingerTable[0].id = successorId
-	node.fingerTable[0].node = &successor
+	node.fingerTable[0].address = &successorAddr
 
 	// notify successor that new node might
 	// be its predecessor
-	successor.Call("Node.Notify", &node, "")
+	successorRPC.Call("Node.Notify", &node, "")
 
 	// get appropriate data from successor
-	successor.Call("Node.TransferData", node.self, "")
+	successorRPC.Call("Node.TransferData", node.id, "")
 	return node, nil
 }
