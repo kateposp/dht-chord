@@ -3,6 +3,8 @@ package chord
 import (
 	"bytes"
 	"crypto/sha1"
+	"math/big"
+	"net/rpc"
 )
 
 // Check if value is between left and right bound
@@ -41,3 +43,12 @@ func getHash(str string) []byte {
 	h.Write([]byte(str))
 	return h.Sum(nil)
 }
+
+func getClient(address *string) (*rpc.Client, error) {
+	client, err := rpc.DialHTTP("tcp", *address)
+	if err != nil {
+		return &rpc.Client{}, ErrUnableToDial
+	}
+	return client, nil
+}
+
