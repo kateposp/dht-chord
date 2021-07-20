@@ -257,10 +257,12 @@ func (node *Node) stabilize() {
 
 	var successorPredAddr string
 	err := successorRPC.Call("Node.GetPredecessor", "", &successorPredAddr)
-	// our successor does not know we are its predecessor
-	if err.Error() == ErrNilPredecessor.Error() {
-		successorRPC.Call("Node.Notify", &node, "")
-		return
+	if err != nil {
+		// our successor does not know we are its predecessor
+		if err.Error() == ErrNilPredecessor.Error() {
+			successorRPC.Call("Node.Notify", node.address, "")
+			return
+		}
 	}
 
 	successorPredRPC, _ := getClient(&successorPredAddr)
@@ -273,7 +275,7 @@ func (node *Node) stabilize() {
 		node.fingerTable[0].address = &successorPredAddr
 	}
 
-	successorPredRPC.Call("Node.Notify", &node, "")
+	successorPredRPC.Call("Node.Notify", node.address, "")
 }
 
 func (node *Node) SetData(data *map[string]string, _ *string) error {
