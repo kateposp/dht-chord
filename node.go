@@ -337,8 +337,7 @@ func (node *Node) Stop() {
 
 	successor := node.fingerTable[0]
 	myPred := node.predecessorId
-
-	if successor.id != nil || equal(successor.id, node.id) {
+	if successor.id != nil && !equal(successor.id, node.id) {
 		node.self.Call("Node.TransferData", successor.address, "")
 		successorRPC, _ := getClient(successor.address)
 		if myPred != nil {
