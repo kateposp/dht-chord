@@ -332,7 +332,7 @@ func (node *Node) SetPredecessor(predAddr *string, _ *string) error {
 // 	1.transfers its keys to its successor
 // 	2.connect its predecessor and successor to
 // 	  each other
-func (node *Node) stop() {
+func (node *Node) Stop() {
 	close(node.exitCh)
 
 	successor := node.fingerTable[0]
