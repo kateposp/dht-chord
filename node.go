@@ -57,43 +57,44 @@ type Finger struct {
 	// Id of n + 2^(i - 1) node
 	id []byte
 
-	// rpc client of n + 2^(i - 1) node
-	node *rpc.Client
+	// address of n + 2^(i - 1) node
+	address *string
 }
 
 // Successor method find the successor of given id.
 // Successor node of id N is the first node whose id is
 // either equal to N or follows N (in clockwise fashnion).
-func (node *Node) Successor(id []byte, rpcClient *rpc.Client) error {
+func (node *Node) Successor(id []byte, rpcAddr *string) error {
+
 	// If the id is between node and its successor
 	// then return the successor
 	if betweenRightInc(id, node.id, node.fingerTable[0].id) {
-		*rpcClient = *node.fingerTable[0].node
+		*rpcAddr = *node.fingerTable[0].address
 		return nil
 	}
 
-	pred := node.closest_preceeding_node(id)
+	pred, address := node.closest_preceeding_node(id)
 	var predId []byte
 	pred.Call("Node.GetId", "", predId)
 
 	if equal(node.id, predId) {
 		// If the closest preceeding node and
 		// current node are same, return pred
-		*rpcClient = pred // or *rpcClient = node.self
+		*rpcAddr = address
 		return nil
 	} else {
-		// If they are different, call Successor funtion
+		// If they are different, call Successor function
 		// on pred and return its result
-		var newRpc rpc.Client
-		pred.Call("Node.Successor", id, &newRpc)
-		*rpcClient = newRpc
+		var newAddress string
+		pred.Call("Node.Successor", id, &newAddress)
+		*rpcAddr = newAddress
 		return nil
 	}
 }
 
 // Find the node closest to the given id with the help
 // of current node's finger table
-func (node *Node) closest_preceeding_node(id []byte) rpc.Client {
+func (node *Node) closest_preceeding_node(id []byte) (*rpc.Client, string) {
 	fingerIndex := len(node.fingerTable) - 1
 
 	// Go through finger table from last entry
@@ -104,13 +105,20 @@ func (node *Node) closest_preceeding_node(id []byte) rpc.Client {
 		finger := node.fingerTable[fingerIndex]
 
 		if between(finger.id, node.id, id) {
-			return *finger.node
+			client, err := getClient(finger.address)
+			if err != nil {
+				// If we are not able to get client of the closest
+				// finger. Try remaining fingers.
+				continue
+			}
+			return client, *finger.address
 		}
 	}
 
 	// If no such finger is found return
 	// the current node
-	return *node.self
+
+	return node.self, node.address
 }
 
 // Check if 'n' is the predecessor of 'node'
@@ -159,18 +167,20 @@ func (node *Node) fixFinger(i int) int {
 	// set it as i th finger of current node
 
 	fingerId := fingerId(node.id, i)
-	var successor rpc.Client
-	node.Successor(fingerId, &successor)
+	var successorAddr string
+	node.Successor(fingerId, &successorAddr)
+
+	successorRPC, _ := getClient(&successorAddr)
 
 	var successorId []byte
-	successor.Call("Node.GetId", "", &successorId)
+	successorRPC.Call("Node.GetId", "", &successorId)
 
 	if node.fingerTable[i] == nil {
 		node.fingerTable[i] = new(Finger)
 	}
 
 	node.fingerTable[i].id = successorId
-	node.fingerTable[i].node = &successor
+	node.fingerTable[i].address = &successorAddr
 
 	return i + 1
 }
@@ -216,9 +226,9 @@ func (node *Node) GetId(_ *string, id *[]byte) error {
 }
 
 // Returns predecessor of a node
-func (node *Node) GetPredecessor(_ *string, reply *rpc.Client) error {
-	if node.predecessorRPC != nil {
-		*reply = *node.predecessorRPC
+func (node *Node) GetPredecessor(_ *string, reply *string) error {
+	if node.predecessorId != nil {
+		*reply = node.predecessorAddr
 		return nil
 	}
 	return ErrNilPredecessor
@@ -237,26 +247,30 @@ func (node *Node) stabilize() {
 		return
 	}
 
-	var x rpc.Client
-	err := successor.node.Call("Node.GetPredecessor", "", &x)
+	successorRPC, _ := getClient(successor.address)
+
+	var successorPredAddr string
+	err := successorRPC.Call("Node.GetPredecessor", "", &successorPredAddr)
 	// our successor does not know we are its predecessor
 	if err == ErrNilPredecessor {
-		successor.node.Call("Node.Notify", &node, "")
+		successorRPC.Call("Node.Notify", &node, "")
 		return
 	}
 
-	var xId []byte
-	x.Call("Node.GetId", "", &xId)
+	successorPredRPC, _ := getClient(&successorPredAddr)
 
-	if between(xId, node.id, node.fingerTable[0].id) {
-		node.fingerTable[0].node = &x
-		node.fingerTable[0].id = xId
+	var predId []byte
+	successorPredRPC.Call("Node.GetId", "", &predId)
+
+	if between(predId, node.id, node.fingerTable[0].id) {
+		node.fingerTable[0].id = predId
+		node.fingerTable[0].address = &successorPredAddr
 	}
 
-	x.Call("Node.Notify", &node, "")
+	successorPredRPC.Call("Node.Notify", &node, "")
 }
 
-func (node *Node) SetData(data *dataStore, _ *string) error {
+func (node *Node) SetData(data *map[string]string, _ *string) error {
 	for key, value := range *data {
 		node.store.set(key, value)
 	}
@@ -276,33 +290,40 @@ func (node *Node) deleteKeys(keys []string) {
 	node.store.del(keys)
 }
 
-func (node *Node) TransferData(to *rpc.Client, _ *string) error {
+func (node *Node) TransferData(to *string, _ *string) error {
+	toRPC, _ := getClient(to)
+
 	var toId []byte
-	to.Call("Node.GetId", "", &toId)
+	toRPC.Call("Node.GetId", "", &toId)
 	delKeys, transfer := node.store.getTransferRange(node.predecessorId, toId)
 
-	to.Call("Node.SetData", &transfer, "")
+	toRPC.Call("Node.SetData", &transfer, "")
 	node.deleteKeys(delKeys)
 
 	return nil
 }
 
 // manually set successor of node
-func (node *Node) SetSuccessor(successor *rpc.Client, _ *string) error {
+func (node *Node) SetSuccessor(successorAddr *string, _ *string) error {
+	successorRPC, _ := getClient(successorAddr)
+
 	var successorId []byte
-	successor.Call("Node.GetId", "", &successorId)
+	successorRPC.Call("Node.GetId", "", &successorId)
 	node.fingerTable[0].id = successorId
-	node.fingerTable[0].node = successor
+	node.fingerTable[0].address = successorAddr
 
 	return nil
 }
 
 // manually set predecessor of node
-func (node *Node) SetPredecessor(pred *rpc.Client, _ *string) error {
+func (node *Node) SetPredecessor(predAddr *string, _ *string) error {
+	predRPC, _ := getClient(predAddr)
+
 	var predId []byte
-	pred.Call("Node.GetId", &predId, "")
+	predRPC.Call("Node.GetId", &predId, "")
 	node.predecessorId = predId
-	node.predecessorRPC = pred
+	node.predecessorRPC = predRPC
+	node.predecessorAddr = *predAddr
 	return nil
 }
 
@@ -313,12 +334,19 @@ func (node *Node) SetPredecessor(pred *rpc.Client, _ *string) error {
 // 	  each other
 func (node *Node) stop() {
 	close(node.exitCh)
-	successor := *node.fingerTable[0].node
-	node.self.Call("Node.TransferData", &successor, "")
-	node.predecessorRPC.Go("Node.SetSuccessor", &successor, "", nil)
 
-	myPred := *node.predecessorRPC
-	node.fingerTable[0].node.Go("Node.SetPredecessor", &myPred, "", nil)
+	successor := node.fingerTable[0]
+	myPred := node.predecessorId
+
+	if successor.id != nil || equal(successor.id, node.id) {
+		node.self.Call("Node.TransferData", successor.address, "")
+		successorRPC, _ := getClient(successor.address)
+		if myPred != nil {
+			myPredRPC, _ := getClient(&node.predecessorAddr)
+			myPredRPC.Go("Node.SetSuccessor", &successor, "", nil)
+			successorRPC.Go("Node.SetPredecessor", &myPred, "", nil)
+		}
+	}
 
 	node.self.Close()
 	node.listener.Close()
