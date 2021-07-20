@@ -122,12 +122,18 @@ func (node *Node) closest_preceeding_node(id []byte) (*rpc.Client, string) {
 }
 
 // Check if 'n' is the predecessor of 'node'
-func (node *Node) Notify(n *Node, _ *string) error {
+func (node *Node) Notify(predAddr *string, _ *string) error {
 	// if predecessor is nil or if n ɛ (current predecessor, node)
 	// set it as predecessor
-	if node.predecessorId == nil || between(n.id, node.predecessorId, node.id) {
-		node.predecessorRPC = n.self
-		node.predecessorId = n.id
+	predRPC, _ := getClient(predAddr)
+	var predId []byte
+
+	predRPC.Call("Node.GetId", "", &predId)
+
+	if node.predecessorId == nil || between(predId, node.predecessorId, node.id) {
+		node.predecessorRPC = predRPC
+		node.predecessorId = predId
+		node.predecessorAddr = *predAddr
 	}
 	return nil
 }
