@@ -15,11 +15,12 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	// Initialize node
 	node := &Node{
-		id:             id,
-		address:        address,
-		predecessorId:  nil,
-		predecessorRPC: nil,
-		exitCh:         make(chan struct{}),
+		id:              id,
+		address:         address,
+		predecessorId:   nil,
+		predecessorRPC:  nil,
+		predecessorAddr: "",
+		exitCh:          make(chan struct{}),
 	}
 
 	// start rpc server for node
