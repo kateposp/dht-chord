@@ -252,7 +252,7 @@ func (node *Node) stabilize() {
 	var successorPredAddr string
 	err := successorRPC.Call("Node.GetPredecessor", "", &successorPredAddr)
 	// our successor does not know we are its predecessor
-	if err == ErrNilPredecessor {
+	if err.Error() == ErrNilPredecessor.Error() {
 		successorRPC.Call("Node.Notify", &node, "")
 		return
 	}
