@@ -34,6 +34,9 @@ type Node struct {
 	// Stores id of predecessor node
 	predecessorId []byte
 
+	// Stores address of predecessor node
+	predecessorAddr string
+
 	// fingerTable contains the list of fingers
 	// associated with a node.
 	fingerTable []*Finger
