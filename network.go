@@ -20,6 +20,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 		predecessorId:   nil,
 		predecessorRPC:  nil,
 		predecessorAddr: "",
+		store:           make(dataStore),
 		exitCh:          make(chan struct{}),
 	}
 
