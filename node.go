@@ -350,8 +350,8 @@ func (node *Node) Stop() {
 		successorRPC, _ := getClient(successor.address)
 		if myPred != nil {
 			myPredRPC, _ := getClient(&node.predecessorAddr)
-			myPredRPC.Go("Node.SetSuccessor", &successor, "", nil)
-			successorRPC.Go("Node.SetPredecessor", &myPred, "", nil)
+			myPredRPC.Call("Node.SetSuccessor", &successor.address, "")
+			successorRPC.Call("Node.SetPredecessor", &node.predecessorAddr, "")
 		}
 	}
 
