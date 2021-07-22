@@ -75,7 +75,7 @@ func (node *Node) Successor(id []byte, rpcAddr *string) error {
 
 	pred, address := node.closest_preceeding_node(id)
 	var predId []byte
-	pred.Call("Node.GetId", "", predId)
+	pred.Call("Node.GetId", "", &predId)
 
 	if equal(node.id, predId) {
 		// If the closest preceeding node and
