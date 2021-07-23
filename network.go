@@ -150,6 +150,6 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	successorRPC.Call("Node.Notify", &node, "")
 
 	// get appropriate data from successor
-	successorRPC.Call("Node.TransferData", node.id, "")
+	successorRPC.Call("Node.TransferData", &node.address, "")
 	return node, nil
 }
