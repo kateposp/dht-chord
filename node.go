@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"net"
 	"net/rpc"
+	"sync"
 	"time"
 )
 
@@ -48,6 +49,10 @@ type Node struct {
 
 	// channel to indicate node is exiting
 	exitCh chan struct{}
+
+	// RW Mutex lock can be held by arbitary
+	// no. of readers or a single writer
+	mutex sync.RWMutex
 }
 
 // Each ith finger represents the node with is
