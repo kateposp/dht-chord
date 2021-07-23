@@ -275,7 +275,7 @@ func (node *Node) stabilize() {
 		node.fingerTable[0].address = &successorPredAddr
 	}
 
-	successorPredRPC.Call("Node.Notify", node.address, "")
+		successorPredRPC.Call("Node.Notify", node.address, "")
 }
 
 func (node *Node) SetData(data *map[string]string, _ *string) error {
