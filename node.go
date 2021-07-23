@@ -359,7 +359,12 @@ func (node *Node) SetSuccessor(successorAddr *string, _ *string) error {
 
 // manually set predecessor of node
 func (node *Node) SetPredecessor(predAddr *string, _ *string) error {
+	// If predAddr is same as our address
+	// make our predecessor nil
+	if *predAddr == node.address {
 		node.makePredecessorNil()
+		return nil
+	}
 	predRPC, _ := getClient(predAddr)
 
 	var predId []byte
