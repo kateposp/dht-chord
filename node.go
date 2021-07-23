@@ -190,10 +190,24 @@ func (node *Node) fixFinger(i int) int {
 	var successorAddr string
 	node.Successor(fingerId, &successorAddr)
 
-	successorRPC, _ := getClient(&successorAddr)
+	successorRPC, err := getClient(&successorAddr)
+
+	if err != nil {
+		// while error is same as ErrFailedToReach
+		// Keep finding a successor for given
+		// fingerId
+		for err.Error() == ErrFailedToReach.Error() {
+			node.Successor(fingerId, &successorAddr)
+			successorRPC, err = getClient(&successorAddr)
+		}
+	}
 
 	var successorId []byte
+	if successorAddr != node.address {
 	successorRPC.Call("Node.GetId", "", &successorId)
+	} else {
+		successorId = node.id
+	}
 
 	successorRPC.Close()
 	if node.fingerTable[i] == nil {
