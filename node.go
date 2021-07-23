@@ -77,6 +77,7 @@ func (node *Node) Successor(id []byte, rpcAddr *string) error {
 	pred, address := node.closest_preceeding_node(id)
 	var predId []byte
 	pred.Call("Node.GetId", "", &predId)
+	defer pred.Close()
 
 	if equal(node.id, predId) {
 		// If the closest preceeding node and
@@ -170,6 +171,11 @@ func (node *Node) checkPredecessor() error {
 }
 
 func (node *Node) makePredecessorNil() {
+	// Close old predecessor RPC client
+	if node.predecessorRPC != nil {
+		node.predecessorRPC.Close()
+	}
+
 	node.predecessorId = nil
 	node.predecessorRPC = nil
 	node.predecessorAddr = ""
@@ -189,6 +195,7 @@ func (node *Node) fixFinger(i int) int {
 	var successorId []byte
 	successorRPC.Call("Node.GetId", "", &successorId)
 
+	successorRPC.Close()
 	if node.fingerTable[i] == nil {
 		node.fingerTable[i] = new(Finger)
 	}
@@ -264,6 +271,7 @@ func (node *Node) stabilize() {
 	var successorPredAddr string
 	err = successorRPC.Call("Node.GetPredecessor", "", &successorPredAddr)
 
+	defer successorRPC.Close()
 	if err != nil {
 		// our successor does not know we are its predecessor
 		// or we are our own successor
@@ -277,6 +285,7 @@ func (node *Node) stabilize() {
 	}
 
 	successorPredRPC, _ := getClient(&successorPredAddr)
+	defer successorPredRPC.Close()
 
 	var predId []byte
 	successorPredRPC.Call("Node.GetId", "", &predId)
@@ -317,6 +326,7 @@ func (node *Node) TransferData(to *string, _ *string) error {
 		return nil
 	}
 
+	defer toRPC.Close()
 
 	var toId []byte
 	toRPC.Call("Node.GetId", "", &toId)
@@ -348,6 +358,7 @@ func (node *Node) SetSuccessor(successorAddr *string, _ *string) error {
 		return nil
 	}
 	successorRPC, _ := getClient(successorAddr)
+	defer successorRPC.Close()
 
 	var successorId []byte
 	successorRPC.Call("Node.GetId", "", &successorId)
@@ -392,6 +403,8 @@ func (node *Node) Stop() {
 		if node.predecessorId != nil {
 			node.predecessorRPC.Call("Node.SetSuccessor", &successor.address, "")
 			successorRPC.Call("Node.SetPredecessor", &node.predecessorAddr, "")
+			node.predecessorRPC.Close()
+			successorRPC.Close()
 		}
 	}
 

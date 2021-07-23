@@ -136,6 +136,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	successorRPC, _ := getClient(&successorAddr)
 	var successorId []byte
 	successorRPC.Call("Node.GetId", "", &successorId)
+	defer successorRPC.Close()
 
 	if equal(successorId, node.id) {
 		return nil, ErrNodeAlreadyExists
