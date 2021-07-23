@@ -1,7 +1,7 @@
 package chord
 
 import (
-	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -53,6 +53,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// prediodically check if predecessor has failed
 	defer func() {
 		if skipDefer {
+			log.Println("Skipping predecessor checks")
 			return
 		}
 		go func() {
@@ -75,6 +76,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// prediodically fix finger table
 	defer func() {
 		if skipDefer {
+			log.Println("Skipping finger fixes")
 			return
 		}
 		go func() {
@@ -98,6 +100,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// prediodically stablize the node
 	defer func() {
 		if skipDefer {
+			log.Println("Skipping stabilize")
 			return
 		}
 		go func() {
