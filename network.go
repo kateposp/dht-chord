@@ -61,10 +61,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 			for {
 				select {
 				case <-ticker.C:
-					err := node.checkPredecessor()
-					if err != nil {
-						fmt.Println(err)
-					}
+					node.checkPredecessor()
 				case <-node.exitCh:
 					ticker.Stop()
 					return
