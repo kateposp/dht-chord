@@ -167,6 +167,12 @@ func (node *Node) checkPredecessor() error {
 	return nil
 }
 
+func (node *Node) makePredecessorNil() {
+	node.predecessorId = nil
+	node.predecessorRPC = nil
+	node.predecessorAddr = ""
+}
+
 // Fixes i th finger
 func (node *Node) fixFinger(i int) int {
 	// find successor of i th offset and
@@ -275,7 +281,7 @@ func (node *Node) stabilize() {
 		node.fingerTable[0].address = &successorPredAddr
 	}
 
-		successorPredRPC.Call("Node.Notify", node.address, "")
+	successorPredRPC.Call("Node.Notify", node.address, "")
 }
 
 func (node *Node) SetData(data *map[string]string, _ *string) error {
