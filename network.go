@@ -120,6 +120,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	// empty join address means new network
 	// hence return the new node
 	if joinNodeAddr == "" {
+		log.Printf("New Network node\nNode id: %d\nSuccessor id: %d\n",
+			toBigInt(node.id),
+			toBigInt(node.fingerTable[0].id),
+		)
 		return node, nil
 	}
 
@@ -155,5 +159,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	// get appropriate data from successor
 	successorRPC.Call("Node.TransferData", &node.address, "")
+
+	log.Printf("New joining node\nNode id: %v\nSuccessor id: %v\n",
+		toBigInt(node.id),
+		toBigInt(node.fingerTable[0].id),
+	)
 	return node, nil
 }
