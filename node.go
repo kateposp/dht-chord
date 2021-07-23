@@ -352,6 +352,7 @@ func (node *Node) stabilize() {
 
 func (node *Node) SetData(data *map[string]string, _ *string) error {
 	for key, value := range *data {
+		log.Println("Setting", key, "on", toBigInt(node.id))
 		node.store.set(key, value)
 	}
 	return nil
