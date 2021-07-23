@@ -455,6 +455,7 @@ func (node *Node) SetPredecessor(predAddr *string, _ *string) error {
 // 	2.connect its predecessor and successor to
 // 	  each other
 func (node *Node) Stop() {
+	log.Println("Stoping -", toBigInt(node.id))
 	close(node.exitCh)
 
 	node.mutex.RLock()
