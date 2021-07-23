@@ -255,21 +255,24 @@ func (node *Node) GetPredecessor(_ *string, reply *string) error {
 func (node *Node) stabilize() {
 	successor := node.fingerTable[0]
 
-	// current node is only node in the network
-	if equal(successor.id, node.id) {
+	successorRPC, err := getClient(successor.address)
+	if err != nil && err.Error() == ErrUnableToDial.Error() {
 		return
 	}
 
-	successorRPC, _ := getClient(successor.address)
-
 	var successorPredAddr string
-	err := successorRPC.Call("Node.GetPredecessor", "", &successorPredAddr)
+	err = successorRPC.Call("Node.GetPredecessor", "", &successorPredAddr)
+
 	if err != nil {
 		// our successor does not know we are its predecessor
-		if err.Error() == ErrNilPredecessor.Error() {
+		// or we are our own successor
+		if err.Error() == ErrNilPredecessor.Error() && !equal(node.id, successor.id) {
 			successorRPC.Call("Node.Notify", node.address, "")
 			return
 		}
+		// if error recieved was other than ErrNilPredecessor
+		// or we are our own successor then do nothing.
+		return
 	}
 
 	successorPredRPC, _ := getClient(&successorPredAddr)
