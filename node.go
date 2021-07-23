@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"log"
 	"math/big"
 	"net"
 	"net/rpc"
@@ -309,12 +310,28 @@ func (node *Node) deleteKeys(keys []string) {
 }
 
 func (node *Node) TransferData(to *string, _ *string) error {
-	toRPC, _ := getClient(to)
+	toRPC, err := getClient(to)
+
+	if err != nil {
+		log.Println("TransferData", err)
+		return nil
+	}
+
 
 	var toId []byte
 	toRPC.Call("Node.GetId", "", &toId)
-	delKeys, transfer := node.store.getTransferRange(node.predecessorId, toId)
+	var delKeys []string
+	var transfer dataStore
 
+	// If ID of node and successor is equal
+	// then predecessor must be nil
+	// hence check keys in current node which
+	// are eligible for transfer
+	if equal(node.id, node.fingerTable[0].id) {
+		delKeys, transfer = node.store.getTransferRange(node.id, toId)
+	} else {
+		delKeys, transfer = node.store.getTransferRange(node.predecessorId, toId)
+	}
 	toRPC.Call("Node.SetData", &transfer, "")
 	node.deleteKeys(delKeys)
 
