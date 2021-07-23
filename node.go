@@ -385,13 +385,12 @@ func (node *Node) Stop() {
 	close(node.exitCh)
 
 	successor := node.fingerTable[0]
-	myPred := node.predecessorId
+
 	if successor.id != nil && !equal(successor.id, node.id) {
 		node.self.Call("Node.TransferData", successor.address, "")
 		successorRPC, _ := getClient(successor.address)
-		if myPred != nil {
-			myPredRPC, _ := getClient(&node.predecessorAddr)
-			myPredRPC.Call("Node.SetSuccessor", &successor.address, "")
+		if node.predecessorId != nil {
+			node.predecessorRPC.Call("Node.SetSuccessor", &successor.address, "")
 			successorRPC.Call("Node.SetPredecessor", &node.predecessorAddr, "")
 		}
 	}
