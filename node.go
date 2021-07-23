@@ -131,6 +131,7 @@ func (node *Node) Notify(predAddr *string, _ *string) error {
 	predRPC.Call("Node.GetId", "", &predId)
 
 	if node.predecessorId == nil || between(predId, node.predecessorId, node.id) {
+		node.makePredecessorNil()
 		node.predecessorRPC = predRPC
 		node.predecessorId = predId
 		node.predecessorAddr = *predAddr
@@ -157,11 +158,11 @@ func (node *Node) checkPredecessor() error {
 	select {
 	case <-callReply.Done:
 		if reply != "Acknowledged" {
+			node.makePredecessorNil()
 			return ErrFailedToReach
 		}
 	case <-time.NewTimer(5 * time.Second).C:
-		node.predecessorId = nil
-		node.predecessorRPC = nil
+		node.makePredecessorNil()
 		return ErrFailedToReach
 	}
 	return nil
@@ -331,10 +332,12 @@ func (node *Node) SetSuccessor(successorAddr *string, _ *string) error {
 
 // manually set predecessor of node
 func (node *Node) SetPredecessor(predAddr *string, _ *string) error {
+		node.makePredecessorNil()
 	predRPC, _ := getClient(predAddr)
 
 	var predId []byte
 	predRPC.Call("Node.GetId", &predId, "")
+	node.makePredecessorNil()
 	node.predecessorId = predId
 	node.predecessorRPC = predRPC
 	node.predecessorAddr = *predAddr
