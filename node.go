@@ -340,12 +340,19 @@ func (node *Node) TransferData(to *string, _ *string) error {
 
 // manually set successor of node
 func (node *Node) SetSuccessor(successorAddr *string, _ *string) error {
+	// If successorAddr is same our address
+	// then set ourself as our successor
+	if *successorAddr == node.address {
+		*node.fingerTable[0].address = node.address
+		node.fingerTable[0].id = node.id
+		return nil
+	}
 	successorRPC, _ := getClient(successorAddr)
 
 	var successorId []byte
 	successorRPC.Call("Node.GetId", "", &successorId)
 	node.fingerTable[0].id = successorId
-	node.fingerTable[0].address = successorAddr
+	*node.fingerTable[0].address = *successorAddr
 
 	return nil
 }
