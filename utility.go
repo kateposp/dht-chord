@@ -52,3 +52,6 @@ func getClient(address *string) (*rpc.Client, error) {
 	return client, nil
 }
 
+func toBigInt(arr []byte) *big.Int {
+	return (&big.Int{}).SetBytes(arr)
+}
