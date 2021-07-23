@@ -74,22 +74,28 @@ func (node *Node) Successor(id []byte, rpcAddr *string) error {
 
 	// If the id is between node and its successor
 	// then return the successor
+	node.mutex.RLock()
 	if betweenRightInc(id, node.id, node.fingerTable[0].id) {
 		*rpcAddr = *node.fingerTable[0].address
+		node.mutex.RUnlock()
 		return nil
 	}
+	node.mutex.RUnlock()
 
 	pred, address := node.closest_preceeding_node(id)
 	var predId []byte
 	pred.Call("Node.GetId", "", &predId)
 	defer pred.Close()
 
+	node.mutex.RLock()
 	if equal(node.id, predId) {
 		// If the closest preceeding node and
 		// current node are same, return pred
 		*rpcAddr = address
+		node.mutex.RUnlock()
 		return nil
 	} else {
+		node.mutex.RUnlock()
 		// If they are different, call Successor function
 		// on pred and return its result
 		var newAddress string
@@ -109,22 +115,29 @@ func (node *Node) closest_preceeding_node(id []byte) (*rpc.Client, string) {
 	// fulfills the criteria:
 	// finger.id ɛ (node.id, id)
 	for ; fingerIndex >= 0; fingerIndex-- {
+		node.mutex.RLock()
 		finger := node.fingerTable[fingerIndex]
+		if finger == nil {
+			node.mutex.RUnlock()
+			continue
+		}
 
 		if between(finger.id, node.id, id) {
 			client, err := getClient(finger.address)
 			if err != nil {
 				// If we are not able to get client of the closest
 				// finger. Try remaining fingers.
+				node.mutex.RUnlock()
 				continue
 			}
+			defer node.mutex.RUnlock()
 			return client, *finger.address
 		}
+		node.mutex.RUnlock()
 	}
 
 	// If no such finger is found return
 	// the current node
-
 	return node.self, node.address
 }
 
@@ -133,15 +146,19 @@ func (node *Node) Notify(predAddr *string, _ *string) error {
 	// if predecessor is nil or if n ɛ (current predecessor, node)
 	// set it as predecessor
 	predRPC, _ := getClient(predAddr)
-	var predId []byte
 
+	var predId []byte
 	predRPC.Call("Node.GetId", "", &predId)
 
 	if node.predecessorId == nil || between(predId, node.predecessorId, node.id) {
 		node.makePredecessorNil()
+
+		node.mutex.Lock()
+		// set new details
 		node.predecessorRPC = predRPC
 		node.predecessorId = predId
 		node.predecessorAddr = *predAddr
+		node.mutex.Unlock()
 	}
 	return nil
 }
@@ -154,7 +171,10 @@ func (node *Node) Check(arg *string, reply *string) error {
 
 // Check if predecessor has failed or not
 func (node *Node) checkPredecessor() error {
+	node.mutex.RLock()
 	myPred := node.predecessorRPC
+	node.mutex.RUnlock()
+
 	var reply string
 	if myPred == nil {
 		return ErrNilPredecessor
@@ -176,6 +196,8 @@ func (node *Node) checkPredecessor() error {
 }
 
 func (node *Node) makePredecessorNil() {
+	node.mutex.Lock()
+	defer node.mutex.Unlock()
 	// Close old predecessor RPC client
 	if node.predecessorRPC != nil {
 		node.predecessorRPC.Close()
@@ -209,18 +231,21 @@ func (node *Node) fixFinger(i int) int {
 
 	var successorId []byte
 	if successorAddr != node.address {
-	successorRPC.Call("Node.GetId", "", &successorId)
+		successorRPC.Call("Node.GetId", "", &successorId)
 	} else {
 		successorId = node.id
 	}
 
 	successorRPC.Close()
+
+	node.mutex.Lock()
 	if node.fingerTable[i] == nil {
 		node.fingerTable[i] = new(Finger)
 	}
 
 	node.fingerTable[i].id = successorId
 	node.fingerTable[i].address = &successorAddr
+	node.mutex.Unlock()
 
 	return i + 1
 }
@@ -261,12 +286,16 @@ func fingerId(n []byte, i int) []byte {
 
 // Return the id of the node
 func (node *Node) GetId(_ *string, id *[]byte) error {
+	node.mutex.RLock()
+	defer node.mutex.RUnlock()
 	*id = node.id
 	return nil
 }
 
 // Returns predecessor of a node
 func (node *Node) GetPredecessor(_ *string, reply *string) error {
+	node.mutex.RLock()
+	defer node.mutex.RUnlock()
 	if node.predecessorId != nil {
 		*reply = node.predecessorAddr
 		return nil
@@ -280,7 +309,9 @@ func (node *Node) GetPredecessor(_ *string, reply *string) error {
 // and check if it is better suited to be the successor
 // of current node.
 func (node *Node) stabilize() {
+	node.mutex.RLock()
 	successor := node.fingerTable[0]
+	node.mutex.RUnlock()
 
 	successorRPC, err := getClient(successor.address)
 	if err != nil && err.Error() == ErrUnableToDial.Error() {
@@ -310,8 +341,10 @@ func (node *Node) stabilize() {
 	successorPredRPC.Call("Node.GetId", "", &predId)
 
 	if between(predId, node.id, node.fingerTable[0].id) {
+		node.mutex.Lock()
 		node.fingerTable[0].id = predId
 		node.fingerTable[0].address = &successorPredAddr
+		node.mutex.Unlock()
 	}
 
 	successorPredRPC.Call("Node.Notify", node.address, "")
@@ -372,8 +405,10 @@ func (node *Node) SetSuccessor(successorAddr *string, _ *string) error {
 	// If successorAddr is same our address
 	// then set ourself as our successor
 	if *successorAddr == node.address {
+		node.mutex.Lock()
 		*node.fingerTable[0].address = node.address
 		node.fingerTable[0].id = node.id
+		node.mutex.Unlock()
 		return nil
 	}
 	successorRPC, _ := getClient(successorAddr)
@@ -381,8 +416,11 @@ func (node *Node) SetSuccessor(successorAddr *string, _ *string) error {
 
 	var successorId []byte
 	successorRPC.Call("Node.GetId", "", &successorId)
+
+	node.mutex.Lock()
 	node.fingerTable[0].id = successorId
 	*node.fingerTable[0].address = *successorAddr
+	node.mutex.Unlock()
 
 	return nil
 }
@@ -399,10 +437,14 @@ func (node *Node) SetPredecessor(predAddr *string, _ *string) error {
 
 	var predId []byte
 	predRPC.Call("Node.GetId", &predId, "")
+
 	node.makePredecessorNil()
+
+	node.mutex.Lock()
 	node.predecessorId = predId
 	node.predecessorRPC = predRPC
 	node.predecessorAddr = *predAddr
+	node.mutex.Unlock()
 	return nil
 }
 
@@ -414,7 +456,9 @@ func (node *Node) SetPredecessor(predAddr *string, _ *string) error {
 func (node *Node) Stop() {
 	close(node.exitCh)
 
+	node.mutex.RLock()
 	successor := node.fingerTable[0]
+	node.mutex.RUnlock()
 
 	if successor.id != nil && !equal(successor.id, node.id) {
 		node.self.Call("Node.TransferData", successor.address, "")
