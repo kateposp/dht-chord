@@ -367,6 +367,7 @@ func (node *Node) GetValue(key *string, value *string) error {
 	return nil
 }
 
+// Wrapper to dataStore.del
 func (node *Node) deleteKeys(keys []string) {
 	node.store.del(keys)
 }
