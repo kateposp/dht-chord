@@ -358,6 +358,8 @@ func (node *Node) SetData(data *map[string]string, _ *string) error {
 	return nil
 }
 
+// Wrapper to dataStore.get
+// Retrieve key-value pair using dataStore API
 func (node *Node) GetValue(key *string, value *string) error {
 	var ok bool
 	*value, ok = node.store.get(*key)
