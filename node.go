@@ -350,6 +350,8 @@ func (node *Node) stabilize() {
 	successorPredRPC.Call("Node.Notify", node.address, "")
 }
 
+// Wrapper to dataStore.set
+// Saves key-value pairs using dataStore API
 func (node *Node) SetData(data *map[string]string, _ *string) error {
 	for key, value := range *data {
 		log.Println("Setting", key, "on", toBigInt(node.id))
