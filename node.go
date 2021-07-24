@@ -476,3 +476,25 @@ func (node *Node) Stop() {
 	node.self.Close()
 	node.listener.Close()
 }
+
+// Saves key-value pair in chord network
+func (node *Node) Save(key, value string) {
+	log.Printf("Saving %q : %q", key, value)
+	var saveNodeAddr string
+	keyHash := getHash(key)
+	node.self.Call("Node.Successor", keyHash, &saveNodeAddr)
+	saveNode, err := getClient(&saveNodeAddr)
+
+	if err != nil {
+		for err.Error() == ErrUnableToDial.Error() {
+			node.self.Call("Node.Successor", keyHash, &saveNodeAddr)
+			saveNode, err = getClient(&saveNodeAddr)
+		}
+	}
+
+	data := make(dataStore)
+	data[key] = value
+	saveNode.Call("Node.SetData", &data, "")
+	saveNode.Close()
+}
+
