@@ -371,6 +371,7 @@ func (node *Node) deleteKeys(keys []string) {
 	node.store.del(keys)
 }
 
+// Transfers key-value pairs to a node
 func (node *Node) TransferData(to *string, _ *string) error {
 	toRPC, err := getClient(to)
 
