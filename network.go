@@ -8,20 +8,22 @@ import (
 	"time"
 )
 
-func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
+func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	skipDefer := false
 
 	id := getHash(address)
 
-	// Initialize node
-	node := &Node{
-		id:              id,
-		address:         address,
-		predecessorId:   nil,
-		predecessorRPC:  nil,
-		predecessorAddr: "",
-		store:           make(dataStore),
-		exitCh:          make(chan struct{}),
+	// Initialize RPC node
+	node := &RPCNode{
+		Node: &Node{
+			id:              id,
+			address:         address,
+			predecessorId:   nil,
+			predecessorRPC:  nil,
+			predecessorAddr: "",
+			store:           make(dataStore),
+			exitCh:          make(chan struct{}),
+		},
 	}
 
 	// start rpc server for node
@@ -135,11 +137,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 
 	// find appropriate successor of new node
 	var successorAddr string
-	joinNodeClient.Call("Node.Successor", node.id, &successorAddr)
-
+	joinNodeClient.Call("RPCNode.Successor", node.id, &successorAddr)
 	successorRPC, _ := getClient(&successorAddr)
 	var successorId []byte
-	successorRPC.Call("Node.GetId", "", &successorId)
+	successorRPC.Call("RPCNode.GetId", "", &successorId)
 	defer successorRPC.Close()
 
 	if equal(successorId, node.id) {
@@ -151,11 +152,11 @@ func CreateNewNode(address string, joinNodeAddr string) (*Node, error) {
 	node.fingerTable[0].address = &successorAddr
 
 	// get appropriate data from successor
-	successorRPC.Call("Node.TransferData", &node.address, "")
+	successorRPC.Call("RPCNode.TransferData", &node.address, "")
 
 	// notify successor that new node might
 	// be its predecessor
-	successorRPC.Call("Node.Notify", &node, "")
+	successorRPC.Call("RPCNode.Notify", &node, "")
 
 	log.Printf("New joining node\nNode id: %v\nSuccessor id: %v\n",
 		toBigInt(node.id),

@@ -67,44 +67,6 @@ type Finger struct {
 	address *string
 }
 
-// Successor method find the successor of given id.
-// Successor node of id N is the first node whose id is
-// either equal to N or follows N (in clockwise fashnion).
-func (node *Node) Successor(id []byte, rpcAddr *string) error {
-
-	// If the id is between node and its successor
-	// then return the successor
-	node.mutex.RLock()
-	if betweenRightInc(id, node.id, node.fingerTable[0].id) {
-		*rpcAddr = *node.fingerTable[0].address
-		node.mutex.RUnlock()
-		return nil
-	}
-	node.mutex.RUnlock()
-
-	pred, address := node.closest_preceeding_node(id)
-	var predId []byte
-	pred.Call("Node.GetId", "", &predId)
-	defer pred.Close()
-
-	node.mutex.RLock()
-	if equal(node.id, predId) {
-		// If the closest preceeding node and
-		// current node are same, return pred
-		*rpcAddr = address
-		node.mutex.RUnlock()
-		return nil
-	} else {
-		node.mutex.RUnlock()
-		// If they are different, call Successor function
-		// on pred and return its result
-		var newAddress string
-		pred.Call("Node.Successor", id, &newAddress)
-		*rpcAddr = newAddress
-		return nil
-	}
-}
-
 // Find the node closest to the given id with the help
 // of current node's finger table
 func (node *Node) closest_preceeding_node(id []byte) (*rpc.Client, string) {
@@ -141,34 +103,6 @@ func (node *Node) closest_preceeding_node(id []byte) (*rpc.Client, string) {
 	return node.self, node.address
 }
 
-// Check if 'n' is the predecessor of 'node'
-func (node *Node) Notify(predAddr *string, _ *string) error {
-	// if predecessor is nil or if n ɛ (current predecessor, node)
-	// set it as predecessor
-	predRPC, _ := getClient(predAddr)
-
-	var predId []byte
-	predRPC.Call("Node.GetId", "", &predId)
-
-	if node.predecessorId == nil || between(predId, node.predecessorId, node.id) {
-		node.makePredecessorNil()
-
-		node.mutex.Lock()
-		// set new details
-		node.predecessorRPC = predRPC
-		node.predecessorId = predId
-		node.predecessorAddr = *predAddr
-		node.mutex.Unlock()
-	}
-	return nil
-}
-
-// Function to check if RPC server is responding
-func (node *Node) Check(arg *string, reply *string) error {
-	*reply = "Acknowledged"
-	return nil
-}
-
 // Check if predecessor has failed or not
 func (node *Node) checkPredecessor() error {
 	node.mutex.RLock()
@@ -180,7 +114,7 @@ func (node *Node) checkPredecessor() error {
 		return ErrNilPredecessor
 	}
 
-	callReply := myPred.Go("Node.Check", "Hello", &reply, nil)
+	callReply := myPred.Go("RPCNode.Check", "Hello", &reply, nil)
 
 	select {
 	case <-callReply.Done:
@@ -211,7 +145,7 @@ func (node *Node) makePredecessorNil() {
 }
 
 // Fixes i th finger
-func (node *Node) fixFinger(i int) int {
+func (node *RPCNode) fixFinger(i int) int {
 	// find successor of i th offset and
 	// set it as i th finger of current node
 
@@ -233,7 +167,7 @@ func (node *Node) fixFinger(i int) int {
 
 	var successorId []byte
 	if successorAddr != node.address {
-		successorRPC.Call("Node.GetId", "", &successorId)
+		successorRPC.Call("RPCNode.GetId", "", &successorId)
 	} else {
 		successorId = node.id
 	}
@@ -286,25 +220,6 @@ func fingerId(n []byte, i int) []byte {
 	return idInt.Bytes()
 }
 
-// Return the id of the node
-func (node *Node) GetId(_ *string, id *[]byte) error {
-	node.mutex.RLock()
-	defer node.mutex.RUnlock()
-	*id = node.id
-	return nil
-}
-
-// Returns predecessor of a node
-func (node *Node) GetPredecessor(_ *string, reply *string) error {
-	node.mutex.RLock()
-	defer node.mutex.RUnlock()
-	if node.predecessorId != nil {
-		*reply = node.predecessorAddr
-		return nil
-	}
-	return ErrNilPredecessor
-}
-
 // get current successor's predecessor node
 // (this might not be same as the node calling this function
 // i.e the current node)
@@ -321,14 +236,14 @@ func (node *Node) stabilize() {
 	}
 
 	var successorPredAddr string
-	err = successorRPC.Call("Node.GetPredecessor", "", &successorPredAddr)
+	err = successorRPC.Call("RPCNode.GetPredecessor", "", &successorPredAddr)
 
 	defer successorRPC.Close()
 	if err != nil {
 		// our successor does not know we are its predecessor
 		// or we are our own successor
 		if err.Error() == ErrNilPredecessor.Error() && !equal(node.id, successor.id) {
-			successorRPC.Call("Node.Notify", node.address, "")
+			successorRPC.Call("RPCNode.Notify", node.address, "")
 			return
 		}
 		// if error recieved was other than ErrNilPredecessor
@@ -340,7 +255,7 @@ func (node *Node) stabilize() {
 	defer successorPredRPC.Close()
 
 	var predId []byte
-	successorPredRPC.Call("Node.GetId", "", &predId)
+	successorPredRPC.Call("RPCNode.GetId", "", &predId)
 
 	if between(predId, node.id, node.fingerTable[0].id) {
 		node.mutex.Lock()
@@ -349,28 +264,7 @@ func (node *Node) stabilize() {
 		node.mutex.Unlock()
 	}
 
-	successorPredRPC.Call("Node.Notify", node.address, "")
-}
-
-// Wrapper to dataStore.set
-// Saves key-value pairs using dataStore API
-func (node *Node) SetData(data *map[string]string, _ *string) error {
-	for key, value := range *data {
-		log.Println("Setting", key, "on", toBigInt(node.id))
-		node.store.set(key, value)
-	}
-	return nil
-}
-
-// Wrapper to dataStore.get
-// Retrieve key-value pair using dataStore API
-func (node *Node) GetValue(key *string, value *string) error {
-	var ok bool
-	*value, ok = node.store.get(*key)
-	if !ok {
-		return ErrNoKeyValuePair
-	}
-	return nil
+	successorPredRPC.Call("RPCNode.Notify", node.address, "")
 }
 
 // Wrapper to dataStore.del
@@ -390,7 +284,7 @@ func (node *Node) TransferData(to *string, _ *string) error {
 	defer toRPC.Close()
 
 	var toId []byte
-	toRPC.Call("Node.GetId", "", &toId)
+	toRPC.Call("RPCNode.GetId", "", &toId)
 	var delKeys []string
 	var transfer dataStore
 
@@ -403,57 +297,9 @@ func (node *Node) TransferData(to *string, _ *string) error {
 	} else {
 		delKeys, transfer = node.store.getTransferRange(node.predecessorId, toId)
 	}
-	toRPC.Call("Node.SetData", &transfer, "")
+	toRPC.Call("RPCNode.SetData", &transfer, "")
 	node.deleteKeys(delKeys)
 
-	return nil
-}
-
-// manually set successor of node
-func (node *Node) SetSuccessor(successorAddr *string, _ *string) error {
-	// If successorAddr is same our address
-	// then set ourself as our successor
-	if *successorAddr == node.address {
-		node.mutex.Lock()
-		*node.fingerTable[0].address = node.address
-		node.fingerTable[0].id = node.id
-		node.mutex.Unlock()
-		return nil
-	}
-	successorRPC, _ := getClient(successorAddr)
-	defer successorRPC.Close()
-
-	var successorId []byte
-	successorRPC.Call("Node.GetId", "", &successorId)
-
-	node.mutex.Lock()
-	node.fingerTable[0].id = successorId
-	*node.fingerTable[0].address = *successorAddr
-	node.mutex.Unlock()
-
-	return nil
-}
-
-// manually set predecessor of node
-func (node *Node) SetPredecessor(predAddr *string, _ *string) error {
-	// If predAddr is same as our address
-	// make our predecessor nil
-	if *predAddr == node.address {
-		node.makePredecessorNil()
-		return nil
-	}
-	predRPC, _ := getClient(predAddr)
-
-	var predId []byte
-	predRPC.Call("Node.GetId", &predId, "")
-
-	node.makePredecessorNil()
-
-	node.mutex.Lock()
-	node.predecessorId = predId
-	node.predecessorRPC = predRPC
-	node.predecessorAddr = *predAddr
-	node.mutex.Unlock()
 	return nil
 }
 
@@ -471,11 +317,11 @@ func (node *Node) Stop() {
 	node.mutex.RUnlock()
 
 	if successor.id != nil && !equal(successor.id, node.id) {
-		node.self.Call("Node.TransferData", successor.address, "")
+		node.self.Call("RPCNode.TransferData", successor.address, "")
 		successorRPC, _ := getClient(successor.address)
 		if node.predecessorId != nil {
-			node.predecessorRPC.Call("Node.SetSuccessor", &successor.address, "")
-			successorRPC.Call("Node.SetPredecessor", &node.predecessorAddr, "")
+			node.predecessorRPC.Call("RPCNode.SetSuccessor", &successor.address, "")
+			successorRPC.Call("RPCNode.SetPredecessor", &node.predecessorAddr, "")
 			node.predecessorRPC.Close()
 			successorRPC.Close()
 		}
@@ -490,19 +336,30 @@ func (node *Node) Save(key, value string) {
 	log.Printf("Saving %q : %q", key, value)
 	var saveNodeAddr string
 	keyHash := getHash(key)
-	node.self.Call("Node.Successor", keyHash, &saveNodeAddr)
+	node.self.Call("RPCNode.Successor", keyHash, &saveNodeAddr)
 	saveNode, err := getClient(&saveNodeAddr)
 
 	if err != nil {
 		for err.Error() == ErrUnableToDial.Error() {
-			node.self.Call("Node.Successor", keyHash, &saveNodeAddr)
+			node.self.Call("RPCNode.Successor", keyHash, &saveNodeAddr)
 			saveNode, err = getClient(&saveNodeAddr)
 		}
 	}
 
 	data := make(dataStore)
 	data[key] = value
-	saveNode.Call("Node.SetData", &data, "")
+	saveNode.Call("RPCNode.SetData", &data, "")
 	saveNode.Close()
 }
 
+func (node *Node) retrieve(key string) string {
+	var getNodeAddr string
+	node.self.Call("RPCNode.Successor", getHash(key), &getNodeAddr)
+
+	getNode, _ := getClient(&getNodeAddr)
+	defer getNode.Close()
+
+	var value string
+	getNode.Call("RPCNode.GetValue", &key, &value)
+	return value
+}
