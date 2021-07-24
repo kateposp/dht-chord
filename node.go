@@ -195,6 +195,8 @@ func (node *Node) checkPredecessor() error {
 	return nil
 }
 
+// Make the fields corresponding to
+// Predecessor nil / default value
 func (node *Node) makePredecessorNil() {
 	node.mutex.Lock()
 	defer node.mutex.Unlock()
