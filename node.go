@@ -277,7 +277,7 @@ func (node *Node) stabilize() {
 
 	successorRPC, err := getClient(successor.address)
 	if err != nil && err.Error() == ErrUnableToDial.Error() {
-		return
+		successorRPC = node.checkSuccessor()
 	}
 
 	var successorPredAddr string
