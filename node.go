@@ -156,12 +156,19 @@ func (node *RPCNode) fixFinger(i int) int {
 	successorRPC, err := getClient(&successorAddr)
 
 	if err != nil {
-		// while error is same as ErrFailedToReach
-		// Keep finding a successor for given
-		// fingerId
-		for err.Error() == ErrFailedToReach.Error() {
+		// keep trying to dial rpc server for given
+		// amount of tries.
+		try := 3
+		for ; err.Error() == ErrUnableToDial.Error() && try > 0; try-- {
+			time.Sleep(time.Second)
 			node.Successor(fingerId, &successorAddr)
 			successorRPC, err = getClient(&successorAddr)
+			if err == nil {
+				break
+			}
+		}
+		if try <= 0 {
+			return i
 		}
 	}
 
