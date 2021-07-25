@@ -144,6 +144,16 @@ func (node *Node) makePredecessorNil() {
 	node.predecessorAddr = ""
 }
 
+// Make node's successor point to itself
+// indicating that it doesn't know its
+// successor
+func (node *Node) makeSuccessorNil() {
+	node.mutex.Lock()
+	defer node.mutex.Unlock()
+	node.fingerTable[0].id = node.id
+	*node.fingerTable[0].address = node.address
+}
+
 // Fixes i th finger
 func (node *RPCNode) fixFinger(i int) int {
 	// find successor of i th offset and
