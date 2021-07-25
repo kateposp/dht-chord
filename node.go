@@ -144,6 +144,34 @@ func (node *Node) makePredecessorNil() {
 	node.predecessorAddr = ""
 }
 
+// Check if current successor has failed
+func (node *Node) checkSuccessor() *rpc.Client {
+	try := 3
+
+	node.mutex.RLock()
+	successor, err := getClient(node.fingerTable[0].address)
+	node.mutex.RUnlock()
+
+	if err != nil && err.Error() == ErrUnableToDial.Error() {
+		for ; err.Error() == ErrUnableToDial.Error() && try > 0; try-- {
+			time.Sleep(time.Second)
+
+			node.mutex.RLock()
+			successor, err = getClient(node.fingerTable[0].address)
+			node.mutex.RUnlock()
+
+			if err == nil {
+				break
+			}
+		}
+	}
+	if try <= 0 {
+		node.makeSuccessorNil()
+		return node.self
+	}
+	return successor
+}
+
 // Make node's successor point to itself
 // indicating that it doesn't know its
 // successor
