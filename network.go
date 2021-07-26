@@ -50,7 +50,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// successor of node is node itself if there
 	// aren't any other nodes in the network
 	node.fingerTable = make([]*Finger, 30)
-	node.fingerTable[0] = &Finger{node.id, &node.address}
+	node.fingerTable[0] = &Finger{node.id, node.address}
 
 	// prediodically check if predecessor has failed
 	defer func() {
@@ -149,7 +149,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 
 	// update first finger to point to successor
 	node.fingerTable[0].id = successorId
-	node.fingerTable[0].address = &successorAddr
+	node.fingerTable[0].address = successorAddr
 
 	// get appropriate data from successor
 	successorRPC.Call("RPCNode.TransferData", &node.address, "")

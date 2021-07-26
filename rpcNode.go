@@ -19,7 +19,7 @@ func (node *RPCNode) Successor(id []byte, rpcAddr *string) error {
 	// then return the successor
 	node.mutex.RLock()
 	if betweenRightInc(id, node.id, node.fingerTable[0].id) {
-		*rpcAddr = *node.fingerTable[0].address
+		*rpcAddr = node.fingerTable[0].address
 		node.mutex.RUnlock()
 		return nil
 	}
@@ -149,7 +149,7 @@ func (node *RPCNode) SetSuccessor(successorAddr *string, _ *string) error {
 	// then set ourself as our successor
 	if *successorAddr == node.address {
 		node.mutex.Lock()
-		*node.fingerTable[0].address = node.address
+		node.fingerTable[0].address = node.address
 		node.fingerTable[0].id = node.id
 		node.mutex.Unlock()
 		return nil
@@ -162,7 +162,7 @@ func (node *RPCNode) SetSuccessor(successorAddr *string, _ *string) error {
 
 	node.mutex.Lock()
 	node.fingerTable[0].id = successorId
-	*node.fingerTable[0].address = *successorAddr
+	node.fingerTable[0].address = *successorAddr
 	node.mutex.Unlock()
 
 	return nil
