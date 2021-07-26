@@ -44,8 +44,8 @@ func getHash(str string) []byte {
 	return h.Sum(nil)
 }
 
-func getClient(address *string) (*rpc.Client, error) {
-	client, err := rpc.DialHTTP("tcp", *address)
+func getClient(address string) (*rpc.Client, error) {
+	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		return &rpc.Client{}, ErrUnableToDial
 	}
