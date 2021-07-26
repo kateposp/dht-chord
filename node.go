@@ -286,7 +286,7 @@ func (node *Node) stabilize() {
 	defer successorRPC.Close()
 	if err != nil {
 		// our successor does not know we are its predecessor
-		// or we are our own successor
+		// and we are not our own successor
 		if err.Error() == ErrNilPredecessor.Error() && !equal(node.id, successor.id) {
 			successorRPC.Call("RPCNode.Notify", node.address, "")
 			return
