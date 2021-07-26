@@ -52,7 +52,7 @@ func (node *RPCNode) Successor(id []byte, rpcAddr *string) error {
 func (node *RPCNode) Notify(predAddr *string, _ *string) error {
 	// if predecessor is nil or if n ɛ (current predecessor, node)
 	// set it as predecessor
-	predRPC, _ := getClient(predAddr)
+	predRPC, _ := getClient(*predAddr)
 
 	var predId []byte
 	predRPC.Call("RPCNode.GetId", "", &predId)
@@ -114,7 +114,7 @@ func (node *RPCNode) GetValue(key *string, value *string) error {
 }
 
 func (node *RPCNode) TransferData(to *string, _ *string) error {
-	toRPC, err := getClient(to)
+	toRPC, err := getClient(*to)
 
 	if err != nil {
 		log.Println("TransferData", err)
@@ -154,7 +154,7 @@ func (node *RPCNode) SetSuccessor(successorAddr *string, _ *string) error {
 		node.mutex.Unlock()
 		return nil
 	}
-	successorRPC, _ := getClient(successorAddr)
+	successorRPC, _ := getClient(*successorAddr)
 	defer successorRPC.Close()
 
 	var successorId []byte
@@ -176,7 +176,7 @@ func (node *RPCNode) SetPredecessor(predAddr *string, _ *string) error {
 		node.makePredecessorNil()
 		return nil
 	}
-	predRPC, _ := getClient(predAddr)
+	predRPC, _ := getClient(*predAddr)
 
 	var predId []byte
 	predRPC.Call("RPCNode.GetId", &predId, "")

@@ -85,7 +85,7 @@ func (node *Node) closest_preceeding_node(id []byte) (*rpc.Client, string) {
 		}
 
 		if between(finger.id, node.id, id) {
-			client, err := getClient(finger.address)
+			client, err := getClient(*finger.address)
 			if err != nil {
 				// If we are not able to get client of the closest
 				// finger. Try remaining fingers.
@@ -149,7 +149,7 @@ func (node *Node) checkSuccessor() *rpc.Client {
 	try := 3
 
 	node.mutex.RLock()
-	successor, err := getClient(node.fingerTable[0].address)
+	successor, err := getClient(*node.fingerTable[0].address)
 	node.mutex.RUnlock()
 
 	if err != nil && err.Error() == ErrUnableToDial.Error() {
@@ -157,7 +157,7 @@ func (node *Node) checkSuccessor() *rpc.Client {
 			time.Sleep(time.Second)
 
 			node.mutex.RLock()
-			successor, err = getClient(node.fingerTable[0].address)
+			successor, err = getClient(*node.fingerTable[0].address)
 			node.mutex.RUnlock()
 
 			if err == nil {
@@ -191,7 +191,7 @@ func (node *RPCNode) fixFinger(i int) int {
 	var successorAddr string
 	node.Successor(fingerId, &successorAddr)
 
-	successorRPC, err := getClient(&successorAddr)
+	successorRPC, err := getClient(successorAddr)
 
 	if err != nil {
 		// keep trying to dial rpc server for given
@@ -200,7 +200,7 @@ func (node *RPCNode) fixFinger(i int) int {
 		for ; err.Error() == ErrUnableToDial.Error() && try > 0; try-- {
 			time.Sleep(time.Second)
 			node.Successor(fingerId, &successorAddr)
-			successorRPC, err = getClient(&successorAddr)
+			successorRPC, err = getClient(successorAddr)
 			if err == nil {
 				break
 			}
@@ -275,7 +275,7 @@ func (node *Node) stabilize() {
 	successor := node.fingerTable[0]
 	node.mutex.RUnlock()
 
-	successorRPC, err := getClient(successor.address)
+	successorRPC, err := getClient(*successor.address)
 	if err != nil && err.Error() == ErrUnableToDial.Error() {
 		successorRPC = node.checkSuccessor()
 	}
@@ -296,7 +296,7 @@ func (node *Node) stabilize() {
 		return
 	}
 
-	successorPredRPC, _ := getClient(&successorPredAddr)
+	successorPredRPC, _ := getClient(successorPredAddr)
 	defer successorPredRPC.Close()
 
 	var predId []byte
@@ -319,7 +319,7 @@ func (node *Node) deleteKeys(keys []string) {
 
 // Transfers key-value pairs to a node
 func (node *Node) TransferData(to *string, _ *string) error {
-	toRPC, err := getClient(to)
+	toRPC, err := getClient(*to)
 
 	if err != nil {
 		log.Println("TransferData", err)
@@ -363,7 +363,7 @@ func (node *Node) Stop() {
 
 	if successor.id != nil && !equal(successor.id, node.id) {
 		node.self.Call("RPCNode.TransferData", successor.address, "")
-		successorRPC, _ := getClient(successor.address)
+		successorRPC, _ := getClient(*successor.address)
 		if node.predecessorId != nil {
 			node.predecessorRPC.Call("RPCNode.SetSuccessor", &successor.address, "")
 			successorRPC.Call("RPCNode.SetPredecessor", &node.predecessorAddr, "")
@@ -382,12 +382,12 @@ func (node *Node) Save(key, value string) {
 	var saveNodeAddr string
 	keyHash := getHash(key)
 	node.self.Call("RPCNode.Successor", keyHash, &saveNodeAddr)
-	saveNode, err := getClient(&saveNodeAddr)
+	saveNode, err := getClient(saveNodeAddr)
 
 	if err != nil {
 		for err.Error() == ErrUnableToDial.Error() {
 			node.self.Call("RPCNode.Successor", keyHash, &saveNodeAddr)
-			saveNode, err = getClient(&saveNodeAddr)
+			saveNode, err = getClient(saveNodeAddr)
 		}
 	}
 
@@ -401,7 +401,7 @@ func (node *Node) retrieve(key string) string {
 	var getNodeAddr string
 	node.self.Call("RPCNode.Successor", getHash(key), &getNodeAddr)
 
-	getNode, _ := getClient(&getNodeAddr)
+	getNode, _ := getClient(getNodeAddr)
 	defer getNode.Close()
 
 	var value string
