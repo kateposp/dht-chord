@@ -64,7 +64,7 @@ type Finger struct {
 	id []byte
 
 	// address of n + 2^(i - 1) node
-	address *string
+	address string
 }
 
 // Find the node closest to the given id with the help
