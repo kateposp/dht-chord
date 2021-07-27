@@ -299,12 +299,12 @@ func (node *Node) stabilize() {
 	successorPredRPC, _ := getClient(successorPredAddr)
 	defer successorPredRPC.Close()
 
-	var predId []byte
-	successorPredRPC.Call("RPCNode.GetId", "", &predId)
+	var successorPredId []byte
+	successorPredRPC.Call("RPCNode.GetId", "", &successorPredId)
 
-	if between(predId, node.id, node.fingerTable[0].id) {
+	if between(successorPredId, node.id, node.fingerTable[0].id) {
 		node.mutex.Lock()
-		node.fingerTable[0].id = predId
+		node.fingerTable[0].id = successorPredId
 		node.fingerTable[0].address = successorPredAddr
 		node.mutex.Unlock()
 	}
