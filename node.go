@@ -307,9 +307,9 @@ func (node *Node) stabilize() {
 		node.fingerTable[0].id = successorPredId
 		node.fingerTable[0].address = successorPredAddr
 		node.mutex.Unlock()
+		successorPredRPC.Call("RPCNode.Notify", node.address, "")
 	}
-
-	successorPredRPC.Call("RPCNode.Notify", node.address, "")
+	successorPredRPC.Close()
 }
 
 // Wrapper to dataStore.del
