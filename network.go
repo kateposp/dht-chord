@@ -121,11 +121,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// empty join address means new network
 	// hence return the new node
 	if joinNodeAddr == "" {
-		fmt.Printf("New Network\nNode: %v\nNode ID: %v\nSuccessor: %v\nSuccessor ID: %v\n",
+		fmt.Printf("============ New Network ============\n\n")
+		fmt.Printf("Node: %v\nNode ID: %v\n",
 			node.address,
 			toBigInt(node.id),
-			node.fingerTable[0].address,
-			toBigInt(node.fingerTable[0].id),
 		)
 		return node, nil
 	}
@@ -162,11 +161,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	successorRPC.Call("RPCNode.Notify", node.address, "")
 	successorRPC.Close()
 
-	fmt.Printf("Joining Node\nNode: %v\nNode ID: %v\nSuccessor: %v\nSuccessor ID: %v\n",
+	fmt.Printf("============ Joining Node ============\n\n")
+	fmt.Printf("Node: %v\nNode ID: %v\n",
 		node.address,
 		toBigInt(node.id),
-		node.fingerTable[0].address,
-		toBigInt(node.fingerTable[0].id),
 	)
 	return node, nil
 }

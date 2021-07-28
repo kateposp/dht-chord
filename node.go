@@ -323,7 +323,7 @@ func (node *Node) deleteKeys(keys []string) {
 // 	2.connect its predecessor and successor to
 // 	  each other
 func (node *Node) Stop() {
-	fmt.Println("Stoping -", toBigInt(node.id))
+	fmt.Println("\nStoping -", toBigInt(node.id))
 	close(node.exitCh)
 
 	node.mutex.RLock()
@@ -347,7 +347,7 @@ func (node *Node) Stop() {
 
 // Saves key-value pair in chord network
 func (node *Node) Save(key, value string) {
-	fmt.Printf("Saving %q : %q", key, value)
+	fmt.Printf("Save %q : %q\n", key, value)
 	var saveNodeAddr string
 	keyHash := getHash(key)
 	node.self.Call("RPCNode.Successor", keyHash, &saveNodeAddr)

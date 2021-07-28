@@ -27,15 +27,15 @@ func (data dataStore) del(keys []string) {
 func (data dataStore) getTransferRange(to string, left, right []byte) ([]string, dataStore) {
 	delKeys := make([]string, 1)
 	transfer := make(dataStore)
-	fmt.Printf("Transfering to %v", toBigInt(right))
+	fmt.Println("Transfering to", to)
 
 	for key, value := range data {
 		if betweenRightInc(getHash(key), left, right) {
-			fmt.Println("transfer:", key)
 			delKeys = append(delKeys, key)
 			transfer[key] = value
 		}
 	}
+	fmt.Println(transfer)
 
 	return delKeys, transfer
 }

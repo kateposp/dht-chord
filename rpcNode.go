@@ -98,9 +98,13 @@ func (node *RPCNode) GetPredecessor(_ *string, reply *string) error {
 }
 
 func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
-	for key, value := range *data {
-		fmt.Printf("Setting %q on %v", key, toBigInt(node.id))
-		node.store.set(key, value)
+	if len(*data) > 1 {
+		fmt.Println("Setting", *data)
+	} else {
+		for key, value := range *data {
+			fmt.Println("Setting", key, ":", value)
+			node.store.set(key, value)
+		}
 	}
 	return nil
 }
