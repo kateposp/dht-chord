@@ -48,10 +48,12 @@ func (node *RPCNode) Successor(id []byte, rpcAddr *string) error {
 	}
 }
 
-// Check if 'n' is the predecessor of 'node'
+// Check if 'n' is the predecessor of node
+//
+// if predecessor is nil or if n ɛ (current predecessor, node)
+// set it as predecessor
 func (node *RPCNode) Notify(predAddr *string, _ *string) error {
-	// if predecessor is nil or if n ɛ (current predecessor, node)
-	// set it as predecessor
+
 	predRPC, _ := getClient(*predAddr)
 
 	var predId []byte
