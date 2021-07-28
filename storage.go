@@ -24,7 +24,7 @@ func (data dataStore) del(keys []string) {
 	}
 }
 
-func (data dataStore) getTransferRange(left, right []byte) ([]string, dataStore) {
+func (data dataStore) getTransferRange(to string, left, right []byte) ([]string, dataStore) {
 	delKeys := make([]string, 1)
 	transfer := make(dataStore)
 	fmt.Printf("Transfering to %v", toBigInt(right))
