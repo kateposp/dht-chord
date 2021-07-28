@@ -1,8 +1,6 @@
 package chord
 
-import (
-	"log"
-)
+import "fmt"
 
 // This structure houses rpc methods of Node
 type RPCNode struct {
@@ -101,7 +99,7 @@ func (node *RPCNode) GetPredecessor(_ *string, reply *string) error {
 
 func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
 	for key, value := range *data {
-		log.Printf("Setting %q on %v", key, toBigInt(node.id))
+		fmt.Printf("Setting %q on %v", key, toBigInt(node.id))
 		node.store.set(key, value)
 	}
 	return nil
@@ -109,7 +107,7 @@ func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
 
 func (node *RPCNode) GetValue(key *string, value *string) error {
 	var ok bool
-	log.Println("getting", key, "from", toBigInt(node.id))
+	fmt.Println("getting", key, "from", toBigInt(node.id))
 	*value, ok = node.store.get(*key)
 	if !ok {
 		return ErrNoKeyValuePair
