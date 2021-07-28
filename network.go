@@ -138,6 +138,8 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// find appropriate successor of new node
 	var successorAddr string
 	joinNodeClient.Call("RPCNode.Successor", node.id, &successorAddr)
+	joinNodeClient.Close()
+
 	successorRPC, _ := getClient(successorAddr)
 	var successorId []byte
 	successorRPC.Call("RPCNode.GetId", "", &successorId)
