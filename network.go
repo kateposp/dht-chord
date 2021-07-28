@@ -2,6 +2,8 @@ package chord
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -12,7 +14,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	skipDefer := false
 
 	id := getHash(address)
-
+	log.SetOutput(io.Discard)
 	// Initialize RPC node
 	node := &RPCNode{
 		Node: &Node{
