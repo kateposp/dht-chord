@@ -378,12 +378,12 @@ func (node *Node) retrieve(key string) string {
 	return value
 }
 
-func (node *Node) TransferData(to *string, _ *string) error {
-	toRPC, err := getClient(*to)
+func (node *Node) transferData(to string) {
+	toRPC, err := getClient(to)
 
 	if err != nil {
 		log.Println("TransferData", err)
-		return nil
+		return
 	}
 
 	defer toRPC.Close()
@@ -408,6 +408,4 @@ func (node *Node) TransferData(to *string, _ *string) error {
 	node.mutex.RUnlock()
 	toRPC.Call("RPCNode.SetData", &transfer, "")
 	node.deleteKeys(delKeys)
-
-	return nil
 }
