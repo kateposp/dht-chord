@@ -328,7 +328,6 @@ func (node *Node) Stop() {
 
 	node.mutex.RLock()
 	successor := node.fingerTable[0]
-	node.mutex.RUnlock()
 
 	if successor.id != nil && !equal(successor.id, node.id) {
 		node.self.Call("RPCNode.TransferData", successor.address, "")
@@ -340,6 +339,7 @@ func (node *Node) Stop() {
 			successorRPC.Close()
 		}
 	}
+	node.mutex.RUnlock()
 
 	node.self.Close()
 	node.listener.Close()
