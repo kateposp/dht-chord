@@ -317,37 +317,6 @@ func (node *Node) deleteKeys(keys []string) {
 	node.store.del(keys)
 }
 
-// Transfers key-value pairs to a node
-func (node *Node) TransferData(to *string, _ *string) error {
-	toRPC, err := getClient(*to)
-
-	if err != nil {
-		log.Println("TransferData", err)
-		return nil
-	}
-
-	defer toRPC.Close()
-
-	var toId []byte
-	toRPC.Call("RPCNode.GetId", "", &toId)
-	var delKeys []string
-	var transfer dataStore
-
-	// If ID of node and successor is equal
-	// then predecessor must be nil
-	// hence check keys in current node which
-	// are eligible for transfer
-	if equal(node.id, node.fingerTable[0].id) {
-		delKeys, transfer = node.store.getTransferRange(node.id, toId)
-	} else {
-		delKeys, transfer = node.store.getTransferRange(node.predecessorId, toId)
-	}
-	toRPC.Call("RPCNode.SetData", &transfer, "")
-	node.deleteKeys(delKeys)
-
-	return nil
-}
-
 // This method is called when node is leaving the
 // chord network. It does the following tasks
 // 	1.transfers its keys to its successor
