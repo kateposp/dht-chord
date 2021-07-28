@@ -155,11 +155,9 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	node.fingerTable[0].id = successorId
 	node.fingerTable[0].address = successorAddr
 
-	// get appropriate data from successor
-	successorRPC.Call("RPCNode.TransferData", &node.address, "")
-
 	// notify successor that new node might
 	// be its predecessor
+	successorRPC.Call("RPCNode.Notify", node.address, "")
 	successorRPC.Close()
 
 	fmt.Printf("Joining Node\nNode: %v\nNode ID: %v\nSuccessor: %v\nSuccessor ID: %v\n",
