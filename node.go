@@ -401,9 +401,9 @@ func (node *Node) transferData(to string) {
 	// predecessor.id to node.id
 	node.mutex.RLock()
 	if node.predecessorId == nil || equal(toId, node.predecessorId) {
-		delKeys, transfer = node.store.getTransferRange(node.id, toId)
+		delKeys, transfer = node.store.getTransferRange(to, node.id, toId)
 	} else {
-		delKeys, transfer = node.store.getTransferRange(node.predecessorId, toId)
+		delKeys, transfer = node.store.getTransferRange(to, node.predecessorId, toId)
 	}
 	node.mutex.RUnlock()
 	toRPC.Call("RPCNode.SetData", &transfer, "")
