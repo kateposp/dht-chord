@@ -60,6 +60,8 @@ func (node *RPCNode) Notify(predAddr *string, _ *string) error {
 	predRPC.Call("RPCNode.GetId", "", &predId)
 
 	if node.predecessorId == nil || between(predId, node.predecessorId, node.id) {
+		node.transferData(*predAddr)
+
 		node.makePredecessorNil()
 
 		node.mutex.Lock()
