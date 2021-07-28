@@ -143,9 +143,9 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	successorRPC, _ := getClient(successorAddr)
 	var successorId []byte
 	successorRPC.Call("RPCNode.GetId", "", &successorId)
-	defer successorRPC.Close()
 
 	if equal(successorId, node.id) {
+		successorRPC.Close()
 		return nil, ErrNodeAlreadyExists
 	}
 
@@ -158,7 +158,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 
 	// notify successor that new node might
 	// be its predecessor
-	successorRPC.Call("RPCNode.Notify", &node, "")
+	successorRPC.Close()
 
 	log.Printf("New joining node\nNode id: %v\nSuccessor id: %v\n",
 		toBigInt(node.id),
