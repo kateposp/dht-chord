@@ -136,10 +136,13 @@ func (node *RPCNode) TransferData(to *string, _ *string) error {
 	// (here toId = predecessor.id)
 	// else gice data which is in range
 	// predecessor.id to node.id
+	node.mutex.RLock()
+	if node.predecessorId == nil || equal(toId, node.predecessorId) {
 		delKeys, transfer = node.store.getTransferRange(node.id, toId)
 	} else {
 		delKeys, transfer = node.store.getTransferRange(node.predecessorId, toId)
 	}
+	node.mutex.RUnlock()
 	toRPC.Call("RPCNode.SetData", &transfer, "")
 	node.deleteKeys(delKeys)
 
