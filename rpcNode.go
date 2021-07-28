@@ -130,11 +130,12 @@ func (node *RPCNode) TransferData(to *string, _ *string) error {
 	var delKeys []string
 	var transfer dataStore
 
-	// If ID of node and successor is equal
-	// then predecessor must be nil
-	// hence check keys in current node which
-	// are eligible for transfer
-	if equal(node.id, node.fingerTable[0].id) {
+	// if the node asking for data is our
+	// predecessor then give only that data
+	// which is in range node.id to toId
+	// (here toId = predecessor.id)
+	// else gice data which is in range
+	// predecessor.id to node.id
 		delKeys, transfer = node.store.getTransferRange(node.id, toId)
 	} else {
 		delKeys, transfer = node.store.getTransferRange(node.predecessorId, toId)
