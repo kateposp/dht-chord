@@ -1,7 +1,7 @@
 package chord
 
 import (
-	"log"
+	"fmt"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -55,7 +55,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// prediodically check if predecessor has failed
 	defer func() {
 		if skipDefer {
-			log.Println("Skipping predecessor checks")
+			fmt.Println("Skipping predecessor checks")
 			return
 		}
 		go func() {
@@ -75,7 +75,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// prediodically fix finger table
 	defer func() {
 		if skipDefer {
-			log.Println("Skipping finger fixes")
+			fmt.Println("Skipping finger fixes")
 			return
 		}
 		go func() {
@@ -99,7 +99,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// prediodically stablize the node
 	defer func() {
 		if skipDefer {
-			log.Println("Skipping stabilize")
+			fmt.Println("Skipping stabilize")
 			return
 		}
 		go func() {
@@ -119,8 +119,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// empty join address means new network
 	// hence return the new node
 	if joinNodeAddr == "" {
-		log.Printf("New Network node\nNode id: %d\nSuccessor id: %d\n",
+		fmt.Printf("New Network\nNode: %v\nNode ID: %v\nSuccessor: %v\nSuccessor ID: %v\n",
+			node.address,
 			toBigInt(node.id),
+			node.fingerTable[0].address,
 			toBigInt(node.fingerTable[0].id),
 		)
 		return node, nil
@@ -160,8 +162,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// be its predecessor
 	successorRPC.Close()
 
-	log.Printf("New joining node\nNode id: %v\nSuccessor id: %v\n",
+	fmt.Printf("Joining Node\nNode: %v\nNode ID: %v\nSuccessor: %v\nSuccessor ID: %v\n",
+		node.address,
 		toBigInt(node.id),
+		node.fingerTable[0].address,
 		toBigInt(node.fingerTable[0].id),
 	)
 	return node, nil
