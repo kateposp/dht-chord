@@ -409,3 +409,39 @@ func (node *Node) transferData(to string) {
 	toRPC.Call("RPCNode.SetData", &transfer, "")
 	node.deleteKeys(delKeys)
 }
+
+func (node *Node) getTransferRange(to string, toID []byte) ([]string, dataStore) {
+	delKeys := make([]string, 0)
+	transfer := make(dataStore)
+	fmt.Println("Transfering to", to)
+
+	node.mutex.RLock()
+	ok := true
+	select {
+	case _, ok = <-node.exitCh:
+	default:
+	}
+
+	if !ok ||
+		(equal(toID, node.fingerTable[0].id) &&
+			!equal(node.fingerTable[0].id, node.predecessorId)) {
+		transfer = node.store
+		fmt.Println("TransferKeys:", len(transfer))
+		for key := range node.store {
+			delKeys = append(delKeys, key)
+		}
+		fmt.Println("deleted keys:", len(delKeys))
+	} else {
+		for key, value := range node.store {
+			//fmt.Println("key:", key, "has boolean", !betweenRightInc(getHash(key), toID, node.id))
+			if !betweenRightInc(getHash(key), toID, node.id) {
+				delKeys = append(delKeys, key)
+				transfer[key] = value
+			}
+		}
+	}
+	node.mutex.RUnlock()
+
+	fmt.Println(transfer)
+	return delKeys, transfer
+}
