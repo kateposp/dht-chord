@@ -1,7 +1,5 @@
 package chord
 
-import "fmt"
-
 // dataStore is an alias to map data structure
 // with string type keys and string type values
 type dataStore map[string]string
@@ -22,20 +20,4 @@ func (data dataStore) del(keys []string) {
 	for _, key := range keys {
 		delete(data, key)
 	}
-}
-
-func (data dataStore) getTransferRange(to string, left, right []byte) ([]string, dataStore) {
-	delKeys := make([]string, 1)
-	transfer := make(dataStore)
-	fmt.Println("Transfering to", to)
-
-	for key, value := range data {
-		if betweenRightInc(getHash(key), left, right) {
-			delKeys = append(delKeys, key)
-			transfer[key] = value
-		}
-	}
-	fmt.Println(transfer)
-
-	return delKeys, transfer
 }
