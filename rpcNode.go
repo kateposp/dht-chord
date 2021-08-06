@@ -152,7 +152,7 @@ func (node *RPCNode) SetPredecessor(predAddr *string, _ *string) error {
 	predRPC, _ := getClient(*predAddr)
 
 	var predId []byte
-	predRPC.Call("RPCNode.GetId", &predId, "")
+	predRPC.Call("RPCNode.GetId", "", &predId)
 
 	node.makePredecessorNil()
 
