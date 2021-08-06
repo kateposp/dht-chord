@@ -389,23 +389,17 @@ func (node *Node) transferData(to string) {
 	defer toRPC.Close()
 
 	var toId []byte
-	toRPC.Call("RPCNode.GetId", "", &toId)
-	var delKeys []string
-	var transfer dataStore
 
-	// if the node asking for data is our
-	// predecessor then give only that data
-	// which is in range node.id to toId
-	// (here toId = predecessor.id)
-	// else gice data which is in range
-	// predecessor.id to node.id
 	node.mutex.RLock()
-	if node.predecessorId == nil || equal(toId, node.predecessorId) {
-		delKeys, transfer = node.store.getTransferRange(to, node.id, toId)
+	if to == node.fingerTable[0].address {
+		toId = node.fingerTable[0].id
 	} else {
-		delKeys, transfer = node.store.getTransferRange(to, node.predecessorId, toId)
+		toRPC.Call("RPCNode.GetId", "", &toId)
 	}
 	node.mutex.RUnlock()
+	// transfer nodes which belong to toID node.
+	delKeys, transfer := node.getTransferRange(to, toId)
+
 	toRPC.Call("RPCNode.SetData", &transfer, "")
 	node.deleteKeys(delKeys)
 }
