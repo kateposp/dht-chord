@@ -98,14 +98,11 @@ func (node *RPCNode) GetPredecessor(_ *string, reply *string) error {
 }
 
 func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
-	if len(*data) > 1 {
-		fmt.Println("Setting", *data)
-	} else {
-		for key, value := range *data {
-			fmt.Println("Setting", key, ":", value)
-			node.store.set(key, value)
-		}
+	fmt.Println("Setting", *data)
+	for key, value := range *data {
+		node.store.set(key, value)
 	}
+	fmt.Println("Printing store\n", node.store)
 	return nil
 }
 
