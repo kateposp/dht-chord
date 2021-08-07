@@ -177,7 +177,20 @@ func (node *RPCNode) SetPredecessor(predAddr *string, _ *string) error {
 	return nil
 }
 
-func (node *RPCNode) Ret(key *string, value *string) error {
-	*value = node.retrieve(*key)
+func (node *RPCNode) Retrieve(key *string, value *string) error {
+	var getNodeAddr string
+	node.self.Call("RPCNode.Successor", getHash(*key), &getNodeAddr)
+
+	getNode, _ := getClient(getNodeAddr)
+	defer getNode.Close()
+
+	var val string
+	err := getNode.Call("RPCNode.GetValue", &key, &val)
+
+	if err != nil {
+		val = err.Error()
+	}
+
+	*value = val
 	return nil
 }
