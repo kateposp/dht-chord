@@ -104,10 +104,12 @@ func (node *RPCNode) GetPredecessor(_ *string, reply *string) error {
 
 // Saves data into node's store
 func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
-	fmt.Println("Setting", *data)
+	fmt.Println("Setting [")
 	for key, value := range *data {
+		fmt.Println(key, ":", value, ",")
 		node.store.set(key, value)
 	}
+	fmt.Println("]")
 	return nil
 }
 
