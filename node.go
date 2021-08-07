@@ -27,10 +27,11 @@ type Node struct {
 	// listener for rpc server
 	listener net.Listener
 
-	// predecessor is the rpc client type of the first
-	// node in anti-clockwise direction from current
-	// node. i.e. the node just before current node
-	// in circular fashion.
+	// predecessor is the first node in anti-clockwise
+	// direction from current node. i.e. the node just
+	// before current node in circular fashion.
+
+	// rpc client of predecessor node
 	predecessorRPC *rpc.Client
 
 	// Stores id of predecessor node
@@ -55,7 +56,7 @@ type Node struct {
 	mutex sync.RWMutex
 }
 
-// Each ith finger represents the node with is
+// Each ith finger represents the node which is
 // atleast at a distance of 2^(i - 1) from
 // current node
 type Finger struct {
@@ -67,8 +68,8 @@ type Finger struct {
 	address string
 }
 
-// Find the node closest to the given id with the help
-// of current node's finger table
+// Find the finger just preceeding the given id from
+// the node's finger table.
 func (node *Node) closest_preceeding_node(id []byte) (*rpc.Client, string) {
 	fingerIndex := len(node.fingerTable) - 1
 
@@ -79,6 +80,7 @@ func (node *Node) closest_preceeding_node(id []byte) (*rpc.Client, string) {
 	for ; fingerIndex >= 0; fingerIndex-- {
 		node.mutex.RLock()
 		finger := node.fingerTable[fingerIndex]
+
 		if finger == nil {
 			node.mutex.RUnlock()
 			continue
@@ -148,10 +150,13 @@ func (node *Node) makePredecessorNil() {
 func (node *Node) checkSuccessor() *rpc.Client {
 	try := 3
 
+	// try to get successor rpc
 	node.mutex.RLock()
 	successor, err := getClient(node.fingerTable[0].address)
 	node.mutex.RUnlock()
 
+	// if we are unable to dail address of successor's rpc server
+	// try re-dailing after 1 second break.
 	if err != nil && err.Error() == ErrUnableToDial.Error() {
 		for ; err.Error() == ErrUnableToDial.Error() && try > 0; try-- {
 			time.Sleep(time.Second)
@@ -161,20 +166,24 @@ func (node *Node) checkSuccessor() *rpc.Client {
 			node.mutex.RUnlock()
 
 			if err == nil {
+				// error is nil i.e. we were able to dail the
+				// rpc server's address. break out of for loop
 				break
 			}
 		}
 	}
 	if try <= 0 {
+		// if we were unable to get rpc client
+		// in 3 tries make successor nil
 		node.makeSuccessorNil()
 		return node.self
 	}
 	return successor
 }
 
-// Make node's successor point to itself
-// indicating that it doesn't know its
-// successor
+// Make node's successor pointer point to
+// itself indicating that it doesn't know
+// its successor
 func (node *Node) makeSuccessorNil() {
 	node.mutex.Lock()
 	defer node.mutex.Unlock()
@@ -182,7 +191,7 @@ func (node *Node) makeSuccessorNil() {
 	node.fingerTable[0].address = node.address
 }
 
-// Fixes i th finger
+// Fixes the i'th finger
 func (node *RPCNode) fixFinger(i int) int {
 	// find successor of i th offset and
 	// set it as i th finger of current node
@@ -202,6 +211,8 @@ func (node *RPCNode) fixFinger(i int) int {
 			node.Successor(fingerId, &successorAddr)
 			successorRPC, err = getClient(successorAddr)
 			if err == nil {
+				// successfully dailed rpc server.
+				// break out of loop
 				break
 			}
 		}
@@ -210,6 +221,7 @@ func (node *RPCNode) fixFinger(i int) int {
 		}
 	}
 
+	// get id of successor of fingerId
 	var successorId []byte
 	if successorAddr != node.address {
 		successorRPC.Call("RPCNode.GetId", "", &successorId)
@@ -220,6 +232,9 @@ func (node *RPCNode) fixFinger(i int) int {
 	successorRPC.Close()
 
 	node.mutex.Lock()
+
+	// Fix the i'th finger
+
 	if node.fingerTable[i] == nil {
 		node.fingerTable[i] = new(Finger)
 	}
@@ -228,6 +243,7 @@ func (node *RPCNode) fixFinger(i int) int {
 	node.fingerTable[i].address = successorAddr
 	node.mutex.Unlock()
 
+	// next finger to fix is i + 1
 	return i + 1
 }
 
@@ -271,6 +287,7 @@ func fingerId(n []byte, i int) []byte {
 // and check if it is better suited to be the successor
 // of current node.
 func (node *Node) stabilize() {
+	// get rpc client of successor
 	node.mutex.RLock()
 	successor := node.fingerTable[0]
 	node.mutex.RUnlock()
@@ -280,19 +297,21 @@ func (node *Node) stabilize() {
 		successorRPC = node.checkSuccessor()
 	}
 
+	// get predecessor of our successor
 	var successorPredAddr string
 	err = successorRPC.Call("RPCNode.GetPredecessor", "", &successorPredAddr)
 
 	defer successorRPC.Close()
 	if err != nil {
-		// our successor does not know we are its predecessor
-		// and we are not our own successor
+		// If our successor does't have a predecessor
+		// and we are not our own successor.
 		if err.Error() == ErrNilPredecessor.Error() && !equal(node.id, successor.id) {
+			// Notify our successor that we might be its predecessor
 			successorRPC.Call("RPCNode.Notify", node.address, "")
 			return
 		}
-		// if error recieved was other than ErrNilPredecessor
-		// or we are our own successor then do nothing.
+		// if error was not ErrNilPredecessor
+		// or we are our own successor, then do nothing.
 		return
 	}
 
@@ -302,6 +321,9 @@ func (node *Node) stabilize() {
 	var successorPredId []byte
 	successorPredRPC.Call("RPCNode.GetId", "", &successorPredId)
 
+	// check if our successor's predecessor is a viable replacement
+	// for our successor. If it is replace our successor and notify
+	// our new successor.
 	if between(successorPredId, node.id, node.fingerTable[0].id) {
 		node.mutex.Lock()
 		node.fingerTable[0].id = successorPredId
@@ -329,9 +351,12 @@ func (node *Node) Stop() {
 	node.mutex.RLock()
 	successor := node.fingerTable[0]
 
+	// if the successor is known, transfer it the data
 	if successor.id != nil && !equal(successor.id, node.id) {
 		node.transferData(successor.address)
 		successorRPC, _ := getClient(successor.address)
+		// if predecessor if know, connect our successor
+		// and predecessor to each other.
 		if node.predecessorId != nil {
 			node.predecessorRPC.Call("RPCNode.SetSuccessor", &successor.address, "")
 			successorRPC.Call("RPCNode.SetPredecessor", &node.predecessorAddr, "")
@@ -348,8 +373,14 @@ func (node *Node) Stop() {
 // Saves key-value pair in chord network
 func (node *Node) Save(key, value string) {
 	fmt.Printf("Save %q : %q\n", key, value)
+
 	var saveNodeAddr string
+
+	// get hash of key
 	keyHash := getHash(key)
+
+	// find the node suitable to store the key and
+	// get its rpc client
 	node.self.Call("RPCNode.Successor", keyHash, &saveNodeAddr)
 	saveNode, err := getClient(saveNodeAddr)
 
@@ -362,6 +393,8 @@ func (node *Node) Save(key, value string) {
 
 	data := make(dataStore)
 	data[key] = value
+
+	// save the data on the node
 	saveNode.Call("RPCNode.SetData", &data, "")
 	saveNode.Close()
 }
@@ -378,6 +411,8 @@ func (node *Node) retrieve(key string) string {
 	return value
 }
 
+// Transfer data to the node whose address is given by
+// "to" parameter
 func (node *Node) transferData(to string) {
 	toRPC, err := getClient(to)
 
@@ -391,31 +426,47 @@ func (node *Node) transferData(to string) {
 	var toId []byte
 
 	node.mutex.RLock()
+	// if transfering data to successor used the
+	// saved id. For other nodes initiate rpc
+	// to get the id for that node.
 	if to == node.fingerTable[0].address {
 		toId = node.fingerTable[0].id
 	} else {
 		toRPC.Call("RPCNode.GetId", "", &toId)
 	}
 	node.mutex.RUnlock()
-	// transfer nodes which belong to toID node.
+
+	// get which data to transfer
 	delKeys, transfer := node.getTransferRange(to, toId)
 
+	// transfer the data
 	toRPC.Call("RPCNode.SetData", &transfer, "")
+
+	// delete data from this node
 	node.deleteKeys(delKeys)
 }
 
+// Finds and returns which key-value pairs are eligible for transfer
 func (node *Node) getTransferRange(to string, toID []byte) ([]string, dataStore) {
 	delKeys := make([]string, 0)
 	transfer := make(dataStore)
+
 	fmt.Println("Transfering to", to)
 
 	node.mutex.RLock()
+
+	// check if node is stopping.
+	// value of ok will be changed
+	// to false if it is stopping.
 	ok := true
 	select {
 	case _, ok = <-node.exitCh:
 	default:
 	}
 
+	// transfer all data to successor only if successor
+	// node and predecessor node are not same or if the
+	// current node is stopping
 	if !ok ||
 		(equal(toID, node.fingerTable[0].id) &&
 			!equal(node.fingerTable[0].id, node.predecessorId)) {
@@ -426,8 +477,11 @@ func (node *Node) getTransferRange(to string, toID []byte) ([]string, dataStore)
 		}
 		fmt.Println("deleted keys:", len(delKeys))
 	} else {
+		// else trasnfer only selected keys
+		//
+		// transfer keys from current node which do not lie
+		// in the interval between toId and node.id (node.id inclusive)
 		for key, value := range node.store {
-			//fmt.Println("key:", key, "has boolean", !betweenRightInc(getHash(key), toID, node.id))
 			if !betweenRightInc(getHash(key), toID, node.id) {
 				delKeys = append(delKeys, key)
 				transfer[key] = value
