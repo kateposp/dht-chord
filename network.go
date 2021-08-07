@@ -11,10 +11,18 @@ import (
 )
 
 func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
+	// Initially do not skip deferred functions
+	// deferred functions are to be skipped in
+	// case of errors
 	skipDefer := false
 
 	id := getHash(address)
+
+	// Discards logger warnings regarding Save and Stop
+	// Non RPC methods not having signature required as per
+	// net/rpc package
 	log.SetOutput(io.Discard)
+
 	// Initialize RPC node
 	node := &RPCNode{
 		Node: &Node{
@@ -28,7 +36,8 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 		},
 	}
 
-	// start rpc server for node
+	// start rpc server for node and listen
+	// for connections
 	rpc.Register(node)
 	rpc.HandleHTTP()
 
@@ -40,7 +49,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	}
 	go http.Serve(node.listener, nil)
 
-	// create rpc client for node
+	// create rpc client for node and save it
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		skipDefer = true
@@ -48,13 +57,14 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	}
 	node.self = client
 
-	// populate finger table
-	// successor of node is node itself if there
-	// aren't any other nodes in the network
+	// populate finger table.
+	// successor of node is the node itself initially,
+	// and is not updated if there aren't any other
+	// nodes in the network i.e. joinNodeAddr was empty
 	node.fingerTable = make([]*Finger, 30)
 	node.fingerTable[0] = &Finger{node.id, node.address}
 
-	// prediodically check if predecessor has failed
+	// prediodically checks if predecessor has failed
 	defer func() {
 		if skipDefer {
 			fmt.Println("Skipping predecessor checks")
@@ -118,8 +128,8 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 		}()
 	}()
 
-	// empty join address means new network
-	// hence return the new node
+	// empty join address implies creation of
+	// new network, hence return the new node
 	if joinNodeAddr == "" {
 		fmt.Printf("============ New Network ============\n\n")
 		fmt.Printf("Node: %v\nNode ID: %v\n",
@@ -129,10 +139,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 		return node, nil
 	}
 
-	// join address was not empty means
+	// Non empty joinNodeAddr implies
 	// this node has to join exitsting network
 
-	joinNodeClient, err := rpc.DialHTTP("tcp", joinNodeAddr)
+	joinNodeClient, err := getClient(joinNodeAddr)
 	if err != nil {
 		skipDefer = true
 		return nil, ErrUnableToDial
@@ -148,6 +158,8 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	successorRPC.Call("RPCNode.GetId", "", &successorId)
 
 	if equal(successorId, node.id) {
+		// Node with same ID already exists in the
+		// network
 		successorRPC.Close()
 		return nil, ErrNodeAlreadyExists
 	}
@@ -157,7 +169,7 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	node.fingerTable[0].address = successorAddr
 
 	// notify successor that new node might
-	// be its predecessor
+	// be its new predecessor
 	successorRPC.Call("RPCNode.Notify", node.address, "")
 	successorRPC.Close()
 
