@@ -108,13 +108,11 @@ func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
 	for key, value := range *data {
 		node.store.set(key, value)
 	}
-	fmt.Println("Printing store\n", node.store)
 	return nil
 }
 
 func (node *RPCNode) GetValue(key *string, value *string) error {
 	var ok bool
-	fmt.Println("getting", key, "from", toBigInt(node.id))
 	*value, ok = node.store.get(*key)
 	if !ok {
 		return ErrNoKeyValuePair

@@ -471,11 +471,9 @@ func (node *Node) getTransferRange(to string, toID []byte) ([]string, dataStore)
 		(equal(toID, node.fingerTable[0].id) &&
 			!equal(node.fingerTable[0].id, node.predecessorId)) {
 		transfer = node.store
-		fmt.Println("TransferKeys:", len(transfer))
 		for key := range node.store {
 			delKeys = append(delKeys, key)
 		}
-		fmt.Println("deleted keys:", len(delKeys))
 	} else {
 		// else trasnfer only selected keys
 		//
