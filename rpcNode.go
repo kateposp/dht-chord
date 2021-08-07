@@ -113,6 +113,9 @@ func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
 	return nil
 }
 
+// Returns the value associated with following key
+// if the node has the pair in its store else returns
+// an error
 func (node *RPCNode) GetValue(key *string, value *string) error {
 	var ok bool
 	*value, ok = node.store.get(*key)
@@ -177,20 +180,28 @@ func (node *RPCNode) SetPredecessor(predAddr *string, _ *string) error {
 	return nil
 }
 
+// Retrieve a key-value pair from chord network
 func (node *RPCNode) Retrieve(key *string, value *string) error {
+
+	// Find where the key is stored
 	var getNodeAddr string
 	node.self.Call("RPCNode.Successor", getHash(*key), &getNodeAddr)
 
 	getNode, _ := getClient(getNodeAddr)
 	defer getNode.Close()
 
+	// Get the value corresponding to the key
+	// from the node which stores the key
 	var val string
 	err := getNode.Call("RPCNode.GetValue", &key, &val)
 
+	// make val equal to error string if there
+	// is an error in getting the value
 	if err != nil {
 		val = err.Error()
 	}
 
+	// set the value variable
 	*value = val
 	return nil
 }
