@@ -23,6 +23,7 @@ func (node *RPCNode) Successor(id []byte, rpcAddr *string) error {
 	}
 	node.mutex.RUnlock()
 
+	// find the closest preceeding node for given id
 	pred, address := node.closest_preceeding_node(id)
 	var predId []byte
 	pred.Call("RPCNode.GetId", "", &predId)
@@ -31,14 +32,15 @@ func (node *RPCNode) Successor(id []byte, rpcAddr *string) error {
 	node.mutex.RLock()
 	if equal(node.id, predId) {
 		// If the closest preceeding node and
-		// current node are same, return pred
+		// current node are same, return the
+		// address of closest preceeding node
 		*rpcAddr = address
 		node.mutex.RUnlock()
 		return nil
 	} else {
 		node.mutex.RUnlock()
 		// If they are different, call Successor function
-		// on pred and return its result
+		// on closest preceeding node and return its result
 		var newAddress string
 		pred.Call("RPCNode.Successor", id, &newAddress)
 		*rpcAddr = newAddress
@@ -46,18 +48,21 @@ func (node *RPCNode) Successor(id []byte, rpcAddr *string) error {
 	}
 }
 
-// Check if 'n' is the predecessor of node
-//
-// if predecessor is nil or if n ɛ (current predecessor, node)
-// set it as predecessor
+// Check if node pointed by predAddr is the predecessor
 func (node *RPCNode) Notify(predAddr *string, _ *string) error {
-
+	// get rpc client
 	predRPC, _ := getClient(*predAddr)
 
 	var predId []byte
 	predRPC.Call("RPCNode.GetId", "", &predId)
 
 	if node.predecessorId == nil || between(predId, node.predecessorId, node.id) {
+		// if our predecessor is nil or if node pointed by predId
+		// is better suited to be our predecessor then replace
+		// our predecessor
+
+		// Transfer any data which might belong to our new
+		// predecessor
 		node.transferData(*predAddr)
 
 		node.makePredecessorNil()
@@ -86,7 +91,7 @@ func (node *RPCNode) GetId(_ *string, id *[]byte) error {
 	return nil
 }
 
-// Returns predecessor of a node
+// Returns predecessor of the node
 func (node *RPCNode) GetPredecessor(_ *string, reply *string) error {
 	node.mutex.RLock()
 	defer node.mutex.RUnlock()
@@ -97,6 +102,7 @@ func (node *RPCNode) GetPredecessor(_ *string, reply *string) error {
 	return ErrNilPredecessor
 }
 
+// Saves data into node's store
 func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
 	fmt.Println("Setting", *data)
 	for key, value := range *data {
@@ -127,6 +133,10 @@ func (node *RPCNode) SetSuccessor(successorAddr *string, _ *string) error {
 		node.mutex.Unlock()
 		return nil
 	}
+
+	// Update successor details in accordance to
+	// the new successor
+
 	successorRPC, _ := getClient(*successorAddr)
 	defer successorRPC.Close()
 
@@ -149,6 +159,9 @@ func (node *RPCNode) SetPredecessor(predAddr *string, _ *string) error {
 		node.makePredecessorNil()
 		return nil
 	}
+
+	// Update predecessor details in accordance
+	// to the new predecessor
 	predRPC, _ := getClient(*predAddr)
 
 	var predId []byte
