@@ -399,18 +399,6 @@ func (node *Node) Save(key, value string) {
 	saveNode.Close()
 }
 
-func (node *Node) retrieve(key string) string {
-	var getNodeAddr string
-	node.self.Call("RPCNode.Successor", getHash(key), &getNodeAddr)
-
-	getNode, _ := getClient(getNodeAddr)
-	defer getNode.Close()
-
-	var value string
-	getNode.Call("RPCNode.GetValue", &key, &value)
-	return value
-}
-
 // Transfer data to the node whose address is given by
 // "to" parameter
 func (node *Node) transferData(to string) {
