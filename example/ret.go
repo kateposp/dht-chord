@@ -13,6 +13,6 @@ func main() {
 	key := "8"
 	var value string
 
-	client.Call("RPCNode.Ret", &key, &value)
+	client.Call("RPCNode.Retrieve", &key, &value)
 	fmt.Printf("%q %q\n", key, value)
 }
