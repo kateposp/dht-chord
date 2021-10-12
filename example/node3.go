@@ -19,7 +19,7 @@ func main() {
 
 	ch := make(chan struct{})
 	go func() {
-		count := 10
+		count := 1000
 		for {
 			ticker := time.NewTicker(5 * time.Second)
 			select {
@@ -28,10 +28,6 @@ func main() {
 				key := strconv.Itoa(count)
 				value := "hello-" + strconv.Itoa(count)
 				node.Save(key, value)
-				if count >= 20 {
-					close(ch)
-				}
-
 			case <-ch:
 				ticker.Stop()
 				return
@@ -42,9 +38,7 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c
-	_, ok := <-ch
-	if ok {
-		close(ch)
-	}
+	close(ch)
+	close(c)
 	node.Stop()
 }
