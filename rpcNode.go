@@ -1,6 +1,8 @@
 package chord
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // This structure houses rpc methods of Node
 type RPCNode struct {
@@ -48,7 +50,7 @@ func (node *RPCNode) Successor(id []byte, rpcAddr *string) error {
 	}
 }
 
-// Check if node pointed by predAddr is the predecessor
+// Check if node pointed by predAddr is the correct/best predecessor
 func (node *RPCNode) Notify(predAddr *string, _ *string) error {
 	// get rpc client
 	predRPC, _ := getClient(*predAddr)
@@ -133,6 +135,8 @@ func (node *RPCNode) SetSuccessor(successorAddr *string, _ *string) error {
 		node.mutex.Lock()
 		node.fingerTable[0].address = node.address
 		node.fingerTable[0].id = node.id
+
+		go updateSuccessor(node.db, node.address, node.address)
 		node.mutex.Unlock()
 		return nil
 	}
@@ -149,6 +153,9 @@ func (node *RPCNode) SetSuccessor(successorAddr *string, _ *string) error {
 	node.mutex.Lock()
 	node.fingerTable[0].id = successorId
 	node.fingerTable[0].address = *successorAddr
+
+	go updateSuccessor(node.db, node.address, *successorAddr)
+
 	node.mutex.Unlock()
 
 	return nil

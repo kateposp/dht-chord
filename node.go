@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"database/sql"
 	"fmt"
 	"math/big"
 	"net"
@@ -54,6 +55,9 @@ type Node struct {
 	// RW Mutex lock can be held by arbitary
 	// no. of readers or a single writer
 	mutex sync.RWMutex
+
+	// Store data in sqlite db to sync with frontend
+	db *sql.DB
 }
 
 // Each ith finger represents the node which is
@@ -189,6 +193,8 @@ func (node *Node) makeSuccessorNil() {
 	defer node.mutex.Unlock()
 	node.fingerTable[0].id = node.id
 	node.fingerTable[0].address = node.address
+	go updateSuccessor(node.db, node.address, node.fingerTable[0].address)
+
 }
 
 // Fixes the i'th finger
@@ -241,6 +247,10 @@ func (node *RPCNode) fixFinger(i int) int {
 
 	node.fingerTable[i].id = successorId
 	node.fingerTable[i].address = successorAddr
+
+	if i == 0 {
+		go updateSuccessor(node.db, node.address, successorAddr)
+	}
 	node.mutex.Unlock()
 
 	// next finger to fix is i + 1
@@ -328,6 +338,9 @@ func (node *Node) stabilize() {
 		node.mutex.Lock()
 		node.fingerTable[0].id = successorPredId
 		node.fingerTable[0].address = successorPredAddr
+
+		go updateSuccessor(node.db, node.address, successorPredAddr)
+
 		node.mutex.Unlock()
 		successorPredRPC.Call("RPCNode.Notify", node.address, "")
 	}
@@ -346,6 +359,10 @@ func (node *Node) deleteKeys(keys []string) {
 // 	  each other
 func (node *Node) Stop() {
 	fmt.Println("\nStoping -", toBigInt(node.id))
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go deleteNode(node.db, node.address, &wg)
+
 	close(node.exitCh)
 
 	node.mutex.RLock()
@@ -368,6 +385,7 @@ func (node *Node) Stop() {
 
 	node.self.Close()
 	node.listener.Close()
+	wg.Wait()
 }
 
 // Saves key-value pair in chord network

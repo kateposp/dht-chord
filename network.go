@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -36,6 +37,9 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 		},
 	}
 
+	// Initialize connection to database
+	node.db, _ = sql.Open("sqlite3", "../connections.db")
+
 	// start rpc server for node and listen
 	// for connections
 	rpc.Register(node)
@@ -63,6 +67,8 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// nodes in the network i.e. joinNodeAddr was empty
 	node.fingerTable = make([]*Finger, 30)
 	node.fingerTable[0] = &Finger{node.id, node.address}
+
+	go saveNode(node.db, node.address, node.fingerTable[0].address)
 
 	// prediodically checks if predecessor has failed
 	defer func() {
@@ -167,6 +173,9 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	// update first finger to point to successor
 	node.fingerTable[0].id = successorId
 	node.fingerTable[0].address = successorAddr
+
+	// update db
+	go updateSuccessor(node.db, node.address, successorAddr)
 
 	// notify successor that new node might
 	// be its new predecessor
