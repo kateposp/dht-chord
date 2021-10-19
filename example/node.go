@@ -9,7 +9,13 @@ import (
 )
 
 func main() {
-	node, err := chord.CreateNewNode("localhost:12334", "")
+	address := os.Args[1]
+	joinAddress := ""
+	if len(os.Args) >= 2 {
+		joinAddress = os.Args[2]
+	}
+	node, err := chord.CreateNewNode(address, joinAddress)
+
 	if err != nil {
 		fmt.Println(err)
 		return
