@@ -389,7 +389,7 @@ func (node *Node) Stop() {
 }
 
 // Saves key-value pair in chord network
-func (node *Node) Save(key, value string) {
+func (node *Node) save(key, value string) string {
 	fmt.Printf("Save %q : %q\n", key, value)
 
 	var saveNodeAddr string
@@ -415,6 +415,7 @@ func (node *Node) Save(key, value string) {
 	// save the data on the node
 	saveNode.Call("RPCNode.SetData", &data, "")
 	saveNode.Close()
+	return saveNodeAddr
 }
 
 // Transfer data to the node whose address is given by
