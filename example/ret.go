@@ -3,10 +3,16 @@ package main
 import (
 	"fmt"
 	"net/rpc"
+	"os"
 )
 
 func main() {
-	client, err := rpc.DialHTTP("tcp", "localhost:12336")
+	if len(os.Args) < 2 {
+		fmt.Println("Insufficient arguments")
+		return
+	}
+	address := os.Args[1]
+	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -14,5 +20,6 @@ func main() {
 	var value string
 
 	client.Call("RPCNode.Retrieve", &key, &value)
+	client.Close()
 	fmt.Printf("%q %q\n", key, value)
 }
