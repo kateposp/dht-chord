@@ -212,3 +212,8 @@ func (node *RPCNode) Retrieve(key *string, value *string) error {
 	*value = val
 	return nil
 }
+
+func (node *RPCNode) Save(arr []string, storeNode *string) error {
+	*storeNode = node.save(arr[0], arr[1])
+	return nil
+}
