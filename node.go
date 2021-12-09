@@ -366,7 +366,8 @@ func (node *Node) Stop() {
 	close(node.exitCh)
 
 	node.mutex.RLock()
-	successor := node.fingerTable[0]
+	successor := *(node.fingerTable)[0]
+	node.mutex.RUnlock()
 
 	// if the successor is known, transfer it the data
 	if successor.id != nil && !equal(successor.id, node.id) {
@@ -381,7 +382,6 @@ func (node *Node) Stop() {
 			successorRPC.Close()
 		}
 	}
-	node.mutex.RUnlock()
 
 	node.self.Close()
 	node.listener.Close()
