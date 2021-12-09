@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		fmt.Println("Insufficient arguments")
 		return
 	}
@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	key := "8"
+	key := os.Args[2]
 	var value string
 
 	client.Call("RPCNode.Retrieve", &key, &value)
