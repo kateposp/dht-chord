@@ -16,7 +16,7 @@ func main() {
 	} else if args > 3 {
 		fmt.Println("More than required number of args")
 		return
-	} else {
+	} else if args < 2 {
 		fmt.Println("Less number of args than required")
 		return
 	}
