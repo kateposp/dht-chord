@@ -12,7 +12,7 @@ func main() {
 		return
 	}
 	address := os.Args[1]
-	arr := make([]string, 2)
+	arr := make([]string, 0)
 	arr = append(arr, os.Args[2])
 	arr = append(arr, os.Args[3])
 	client, err := rpc.DialHTTP("tcp", address)
