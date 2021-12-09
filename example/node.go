@@ -9,11 +9,19 @@ import (
 )
 
 func main() {
-	address := os.Args[1]
+	args := len(os.Args)
 	joinAddress := ""
-	if len(os.Args) >= 2 {
+	if args == 3 {
 		joinAddress = os.Args[2]
+	} else if args > 3 {
+		fmt.Println("More than required number of args")
+		return
+	} else {
+		fmt.Println("Less number of args than required")
+		return
 	}
+	address := os.Args[1]
+
 	node, err := chord.CreateNewNode(address, joinAddress)
 
 	if err != nil {
