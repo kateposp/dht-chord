@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+  <meta charset="utf-8">
+  <title>Chord Visualizer</title>
+    <link rel="stylesheet" href="css/style.css">
+  <style>
+  line.node-link, path.node-link {
+    fill: none;
+    stroke: black
+  }
+  circle.node {
+    fill: white;
+    stroke: black;
+  }
+  circle.node+text {
+    text-anchor: middle;
+  }
+  text {
+    font-family: sans-serif;
+    pointer-events: none;
+  }
+
+  </style>
+</head>
+<body>
+    <div id="server-layout"></div>
+    <div>
+        <div class="server-box">
+            <div class="box-heading">
+                <h4>Server Details</h4>
+                <div class="act active"><div class="act-status-color"></div><div class="act-status">Active</div></div>
+            </div>
+            <div class="box-body">
+                <div class="box-info">
+                    <div class="content-head">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-globe2" viewBox="0 0 16 16">
+                            <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855-.143.268-.276.56-.395.872.705.157 1.472.257 2.282.287V1.077zM4.249 3.539c.142-.384.304-.744.481-1.078a6.7 6.7 0 0 1 .597-.933A7.01 7.01 0 0 0 3.051 3.05c.362.184.763.349 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9.124 9.124 0 0 1-1.565-.667A6.964 6.964 0 0 0 1.018 7.5h2.49zm1.4-2.741a12.344 12.344 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332zM8.5 5.09V7.5h2.99a12.342 12.342 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.612 13.612 0 0 1 7.5 10.91V8.5H4.51zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741H8.5zm-3.282 3.696c.12.312.252.604.395.872.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a6.696 6.696 0 0 1-.598-.933 8.853 8.853 0 0 1-.481-1.079 8.38 8.38 0 0 0-1.198.49 7.01 7.01 0 0 0 2.276 1.522zm-1.383-2.964A13.36 13.36 0 0 1 3.508 8.5h-2.49a6.963 6.963 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667zm6.728 2.964a7.009 7.009 0 0 0 2.275-1.521 8.376 8.376 0 0 0-1.197-.49 8.853 8.853 0 0 1-.481 1.078 6.688 6.688 0 0 1-.597.933zM8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855.143-.268.276-.56.395-.872A12.63 12.63 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.963 6.963 0 0 0 14.982 8.5h-2.49a13.36 13.36 0 0 1-.437 3.008zM14.982 7.5a6.963 6.963 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008h2.49zM11.27 2.461c.177.334.339.694.482 1.078a8.368 8.368 0 0 0 1.196-.49 7.01 7.01 0 0 0-2.275-1.52c.218.283.418.597.597.932zm-.488 1.343a7.765 7.765 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/>
+                        </svg>
+                        
+                        <h5>IP Address</h5>
+                    </div>
+                    <div class="content-detail" id="ip"></div>
+                </div>
+                <div class="box-info">
+                    <form action="" class="key-search">
+                        <label for="server-key">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="height: 25px !important; width: 25px !important;" width="16" height="16" fill="currentColor" class="bi bi-key-fill" viewBox="0 0 16 16">
+                                <path d="M3.5 11.5a3.5 3.5 0 1 1 3.163-5H14L15.5 8 14 9.5l-1-1-1 1-1-1-1 1-1-1-1 1H6.663a3.5 3.5 0 0 1-3.163 2zM2.5 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                              </svg>
+        
+                            <input type="text" name="server-key" id="server-key" placeholder="Key">
+                        </label>
+                        <button type="button" class="btn-primary" id="search-key">Search</button>
+                    </form>
+                </div>
+                <div class="box-info hide" id="searched-value">
+                    <div class="content-head">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gem" viewBox="0 0 16 16">
+                            <path d="M3.1.7a.5.5 0 0 1 .4-.2h9a.5.5 0 0 1 .4.2l2.976 3.974c.149.185.156.45.01.644L8.4 15.3a.5.5 0 0 1-.8 0L.1 5.3a.5.5 0 0 1 0-.6l3-4zm11.386 3.785-1.806-2.41-.776 2.413 2.582-.003zm-3.633.004.961-2.989H4.186l.963 2.995 5.704-.006zM5.47 5.495 8 13.366l2.532-7.876-5.062.005zm-1.371-.999-.78-2.422-1.818 2.425 2.598-.003zM1.499 5.5l5.113 6.817-2.192-6.82L1.5 5.5zm7.889 6.817 5.123-6.83-2.928.002-2.195 6.828z"/>
+                        </svg>
+                        
+                        <h5>Value</h5>
+                    </div>
+                    <div class="content-detail">loading...</div>
+                </div>
+            </div>
+            <div class="box-footer">
+                <button class="btn-primary" id="btn-add" type="button">Add</button>
+            </div>
+            <div class="box-dropdown" id="box-add-dropdown">
+                <h5>Please Enter a Key and a Value.</h5>
+                <form action="">
+                    <label for="server-key-add">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-key-fill" viewBox="0 0 16 16">
+                            <path d="M3.5 11.5a3.5 3.5 0 1 1 3.163-5H14L15.5 8 14 9.5l-1-1-1 1-1-1-1 1-1-1-1 1H6.663a3.5 3.5 0 0 1-3.163 2zM2.5 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                          </svg>
+    
+                        <input type="text" name="server-key-add" id="server-key-add" placeholder="Key">
+                    </label>
+                    <label for="server-value-add">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gem" viewBox="0 0 16 16">
+                            <path d="M3.1.7a.5.5 0 0 1 .4-.2h9a.5.5 0 0 1 .4.2l2.976 3.974c.149.185.156.45.01.644L8.4 15.3a.5.5 0 0 1-.8 0L.1 5.3a.5.5 0 0 1 0-.6l3-4zm11.386 3.785-1.806-2.41-.776 2.413 2.582-.003zm-3.633.004.961-2.989H4.186l.963 2.995 5.704-.006zM5.47 5.495 8 13.366l2.532-7.876-5.062.005zm-1.371-.999-.78-2.422-1.818 2.425 2.598-.003zM1.499 5.5l5.113 6.817-2.192-6.82L1.5 5.5zm7.889 6.817 5.123-6.83-2.928.002-2.195 6.828z"/>
+                        </svg>
+    
+                        <input type="text" name="server-value-add" id="server-value-add" placeholder="Value">
+                    </label>
+                    <button type="button" class="add-submit">Submit</button>
+                </form>
+            </div>
+        </div>
+        <script defer>
+            const addBtn = document.querySelector('#btn-add');
+            const removeBtn = document.querySelector('#btn-remove');
+            const boxAddDropdown = document.querySelector('#box-add-dropdown');
+            const boxRemoveDropdown = document.querySelector('#box-remove-dropdown');
+            const searchKey = document.querySelector('#search-key')
+            const searchedValue = document.querySelector('#searched-value')
+    
+            addBtn.addEventListener('click', function() {
+                
+                boxAddDropdown.classList.toggle('active');
+            });
+    
+            searchKey.addEventListener('click', function(e) {
+                e.preventDefault;
+                searchedValue.classList.add('show');
+            })
+    
+        </script>
+<script type="text/javascript">
+// number of random nodes (gets crowded at >25 unless you change node diameter)
+
+var num = 6;
+var links = d3.range(num).map(function(d) { return {source: getRandomInt(), target: getRandomInt()}; });
+
+var nodes = [
+    {id: 0, name: '120.0.0.1', fixed: false},
+    {id: 1, name: '120.0.0.2', fixed: false},
+    {id: 2, name: '120.0.0.3', fixed: false},
+    {id: 3, name: '120.0.0.4', fixed: false},
+    {id: 4, name: '120.0.0.5', fixed: false},
+    {id: 5, name: '120.0.0.6', fixed: false},
+];
+
+
+// links returns a [list] of {source: 0, target: 1} (values refer to indicies of nodes)
+// var nodes = [
+//     {id: 0},
+//     {id: 1},
+//     {id: 2},
+//     {id: 3},
+//     {id: 4},
+//     {id: 5},
+// ]
+var links = [
+    {source: 0, target: 1},
+    {source: 1, target: 2},
+    {source: 2, target: 3},
+    {source: 3, target: 4},
+    {source: 4, target: 5},
+    {source: 5, target: 0},
+];
+// nodes = [
+//     {id: 0, name: '120.0.0.1', fixed: false},
+//     {id: 1, name: '120.0.0.2', fixed: false},
+//     {id: 2, name: '120.0.0.3', fixed: false},
+//     {id: 3, name: '120.0.0.4', fixed: false},
+//     {id: 4, name: '120.0.0.5', fixed: false},
+// ];
+// links = [
+//     {source: 0, target: 1},
+//     {source: 1, target: 2},
+//     {source: 2, target: 3},
+//     {source: 3, target: 4},
+//     {source: 4, target: 0},
+// ];
+
+// var nodes = [];
+    
+//     // compute nodes from links data
+//     links.forEach(function(link) {
+//         link.source = nodes[link.source] ||
+//             (nodes[link.source] = {name: link.source});
+//         link.target = nodes[link.target] ||
+//             (nodes[link.target] = {name: link.target});        
+//     });
+
+var width = 500,
+    height = 500;
+
+url = 'http://127.0.0.1:8000/chord/nodes'
+
+setInterval(() => {
+    fetch(url).then(function(response) {
+    return response.json();
+    }).then(function(data) {
+    
+        renderD3(data.nodes, data.links);
+    console.log(nodes)
+    links = data.links
+    }).catch(function() {
+    });
+}, 2000);
+
+d3.select('#search-key')
+    .on('click', function() {
+        let key = document.getElementById("server-key").value
+        console.log(key);
+        let url = `http://127.0.0.1:8000/chord/nodes/${key}`
+        console.log(url)
+        fetch(url).then(function(response) {
+        return response.json();
+        }).then(function(data) {
+        console.log(data);
+        alert(data.value);
+        d3.select('#searched-value').select('.content-detail').text(data.value)
+        })
+        console.log('here')
+    })
+d3.select('.add-submit')
+    .on('click', () => {
+        let key = document.getElementById("server-key-add").value
+        let value = document.getElementById("server-value-add").value
+        console.log(key);
+        let url = `http://127.0.0.1:8000/chord/nodes/${key}/${value}`
+        console.log(url)
+        fetch(url).then(function(response) {
+        return response.json();
+        }).then(function(data) {
+        console.log(data);
+        alert(data.value);
+        })
+    })
+
+function renderD3(nodes, links) {
+    d3.select('svg').remove();
+    var force = d3.layout.force()
+        .nodes(nodes)
+        .links(links)
+        .size([width, height]);
+
+    // evenly spaces nodes along arc
+    var circleCoord = function(node, index, num_nodes){
+        var circumference = circle.node().getTotalLength();
+        var pointAtLength = function(l){return circle.node().getPointAtLength(l)};
+        var sectionLength = (circumference)/num_nodes;
+        var position = sectionLength*index+sectionLength/2;
+        return pointAtLength(circumference-position)
+    }
+
+    // fades out lines that aren't connected to node d
+    var is_connected = function(d, opacity) {
+        lines.transition().style("stroke-opacity", function(o) {
+            return o.source === d || o.target === d ? 1 : opacity;
+        });
+    }
+
+    var svg = d3.select("#server-layout").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+
+    // invisible circle for placing nodes
+    // it's actually two arcs so we can use the getPointAtLength() and getTotalLength() methods
+    var dim = width-80
+    var circle = svg.append("path")
+        .attr("d", "M 40, "+(dim/2+40)+" a "+dim/2+","+dim/2+" 0 1,0 "+dim+",0 a "+dim/2+","+dim/2+" 0 1,0 "+dim*-1+",0")
+        .style("fill", "#f5f5f5");
+
+    force.start();
+
+    // set coordinates for container nodes
+    nodes.forEach(function(n, i) {
+        var coord = circleCoord(n, i, nodes.length)
+        n.x = coord.x
+        n.y = coord.y
+    });
+
+    // use this one for straight line links...
+    // var lines = svg.selectAll("line.node-link")
+    //   .data(links).enter().append("line")
+    //     .attr("class", "node-link")
+    //   .attr("x1", function(d) { return d.source.x; })
+    //   .attr("y1", function(d) { return d.source.y; })
+    //   .attr("x2", function(d) { return d.target.x; })
+    //   .attr("y2", function(d) { return d.target.y; });
+
+    // ...or use this one for curved line links
+    var lines = svg.selectAll("path.node-link")
+        .data(links).enter().append("path")
+        .attr("class", "node-link")
+        .attr("d", function(d) {
+            var dx = d.target.x - d.source.x,
+                dy = d.target.y - d.source.y,
+                dr = Math.sqrt(dx * dx + dy * dy);
+            return "M" + 
+                d.source.x + "," + 
+                d.source.y + "A" + 
+                dr + "," + dr + " 0 0,1 " + 
+                d.target.x + "," + 
+                d.target.y;
+        });
+
+    var gnodes = svg.selectAll('g.gnode')
+        .data(nodes).enter().append('g')
+        .attr("transform", function(d) {
+            return "translate("+d.x+","+d.y+")"
+        })
+        .classed('gnode', true);
+
+    var node = gnodes.append("circle")
+        .attr("r", 25)
+        .attr("class", "node")
+        .on("mouseenter", function(d) {
+            is_connected(d, 0.1)
+            node.transition().duration(100).attr("r", 25)
+            d3.select(this).transition().duration(100).attr("r", 30)
+        })
+        .on("mouseleave", function(d) {
+            node.transition().duration(100).attr("r", 25);
+            is_connected(d, 1);
+        })
+        .on("click", function(d) {
+            console.log(d);
+            d3.select("#ip").text(d.name)
+            d3.select("#key").text("xyz")
+            d3.select("#value").text("12435")
+        })
+        ;  
+
+    var labels = gnodes.append("text")
+        .attr("dy", 4)
+        .text(function(d){return d.name})
+}
+</script>
+
+</body>
+</html>
