@@ -47,10 +47,15 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 
 	// start rpc server for node and listen
 	// for connections
-	rpc.Register(node)
+	var err error
+
+	err = rpc.Register(node)
+	if err != nil {
+		skipDefer = true
+		return nil, err
+	}
 	rpc.HandleHTTP()
 
-	var err error
 	node.listener, err = net.Listen("tcp", address)
 	if err != nil {
 		skipDefer = true
