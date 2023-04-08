@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	chord "github.com/sethiojas/dht-chord"
+	chord "github.com/kateposp/dht-chord"
 )
 
 func main() {

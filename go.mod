@@ -1,4 +1,4 @@
-module github.com/sethiojas/dht-chord
+module github.com/kateposp/dht-chord
 
 go 1.16
 
