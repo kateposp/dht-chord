@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -38,7 +40,10 @@ func CreateNewNode(address string, joinNodeAddr string) (*RPCNode, error) {
 	}
 
 	// Initialize connection to database
-	node.db, _ = sql.Open("sqlite3", "../connections.db")
+
+	_, b, _, _ := runtime.Caller(0)
+	dbPath := filepath.Dir(b) + "/connections.db"
+	node.db, _ = sql.Open("sqlite3", dbPath)
 
 	// start rpc server for node and listen
 	// for connections
