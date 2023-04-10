@@ -45,7 +45,7 @@ type Node struct {
 	// associated with a node.
 	fingerTable []*Finger
 
-	// store stores the key-value pairs assigned to
+	// store stores the Key-Value pairs assigned to
 	// the node.
 	store dataStore
 
@@ -136,7 +136,7 @@ func (node *Node) checkPredecessor() error {
 }
 
 // Make the fields corresponding to
-// Predecessor nil / default value
+// Predecessor nil / default Value
 func (node *Node) makePredecessorNil() {
 	node.mutex.Lock()
 	defer node.mutex.Unlock()
@@ -388,16 +388,16 @@ func (node *Node) Stop() {
 	wg.Wait()
 }
 
-// Saves key-value pair in chord network
-func (node *Node) save(key, value string) string {
+// Saves Key-Value pair in chord network
+func (node *Node) save(key string, value []byte) string {
 	fmt.Printf("Save %q : %q\n", key, value)
 
 	var saveNodeAddr string
 
-	// get hash of key
+	// get hash of Key
 	keyHash := getHash(key)
 
-	// find the node suitable to store the key and
+	// find the node suitable to store the Key and
 	// get its rpc client
 	node.self.Call("RPCNode.Successor", keyHash, &saveNodeAddr)
 	saveNode, err := getClient(saveNodeAddr)
@@ -453,7 +453,7 @@ func (node *Node) transferData(to string) {
 	node.deleteKeys(delKeys)
 }
 
-// Finds and returns which key-value pairs are eligible for transfer
+// Finds and returns which Key-Value pairs are eligible for transfer
 func (node *Node) getTransferRange(to string, toID []byte) ([]string, dataStore) {
 	delKeys := make([]string, 0)
 	transfer := make(dataStore)
@@ -463,7 +463,7 @@ func (node *Node) getTransferRange(to string, toID []byte) ([]string, dataStore)
 	node.mutex.RLock()
 
 	// check if node is stopping.
-	// value of ok will be changed
+	// Value of ok will be changed
 	// to false if it is stopping.
 	ok := true
 	select {
