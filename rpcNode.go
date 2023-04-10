@@ -105,7 +105,7 @@ func (node *RPCNode) GetPredecessor(_ *string, reply *string) error {
 }
 
 // Saves data into node's store
-func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
+func (node *RPCNode) SetData(data *map[string][]byte, _ *string) error {
 	fmt.Println("Setting [")
 	for key, value := range *data {
 		fmt.Println(key, ":", value, ",")
@@ -115,10 +115,10 @@ func (node *RPCNode) SetData(data *map[string]string, _ *string) error {
 	return nil
 }
 
-// Returns the value associated with following key
+// Returns the Value associated with following Key
 // if the node has the pair in its store else returns
 // an error
-func (node *RPCNode) GetValue(key *string, value *string) error {
+func (node *RPCNode) GetValue(key *string, value *[]byte) error {
 	var ok bool
 	*value, ok = node.store.get(*key)
 	if !ok {
@@ -187,33 +187,33 @@ func (node *RPCNode) SetPredecessor(predAddr *string, _ *string) error {
 	return nil
 }
 
-// Retrieve a key-value pair from chord network
-func (node *RPCNode) Retrieve(key *string, value *string) error {
+// Retrieve a Key-Value pair from chord network
+func (node *RPCNode) Retrieve(key *string, value *[]byte) error {
 
-	// Find where the key is stored
+	// Find where the Key is stored
 	var getNodeAddr string
 	node.self.Call("RPCNode.Successor", getHash(*key), &getNodeAddr)
 
 	getNode, _ := getClient(getNodeAddr)
 	defer getNode.Close()
 
-	// Get the value corresponding to the key
-	// from the node which stores the key
-	var val string
+	// Get the Value corresponding to the Key
+	// from the node which stores the Key
+	var val []byte
 	err := getNode.Call("RPCNode.GetValue", &key, &val)
 
 	// make val equal to error string if there
-	// is an error in getting the value
+	// is an error in getting the Value
 	if err != nil {
-		val = err.Error()
+		val = []byte(err.Error())
 	}
 
-	// set the value variable
+	// set the Value variable
 	*value = val
 	return nil
 }
 
-func (node *RPCNode) Save(arr []string, storeNode *string) error {
-	*storeNode = node.save(arr[0], arr[1])
+func (node *RPCNode) Save(e KeyValue, storeNode *string) error {
+	*storeNode = node.save(e.Key, e.Value)
 	return nil
 }

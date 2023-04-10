@@ -3,18 +3,14 @@ package main
 import (
 	"fmt"
 	"net/rpc"
-	"os"
 )
 
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Println("Insufficient arguments")
-		return
-	}
-	address := os.Args[1]
+
+	address := "127.0.0.1:35383"
 	arr := make([]string, 0)
-	arr = append(arr, os.Args[2])
-	arr = append(arr, os.Args[3])
+	arr = append(arr, "key")
+	arr = append(arr, "hot")
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		fmt.Println(err)

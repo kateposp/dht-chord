@@ -2,20 +2,25 @@ package chord
 
 // dataStore is an alias to map data structure
 // with string type keys and string type values
-type dataStore map[string]string
+type dataStore map[string][]byte
 
-// Save a key-value pair
-func (data dataStore) set(key, value string) {
+type KeyValue struct {
+	Key   string
+	Value []byte
+}
+
+// Save a Key-Value pair
+func (data dataStore) set(key string, value []byte) {
 	data[key] = value
 }
 
-// Return the value associated with the given key
-func (data dataStore) get(key string) (string, bool) {
+// Return the Value associated with the given Key
+func (data dataStore) get(key string) ([]byte, bool) {
 	value, ok := data[key]
 	return value, ok
 }
 
-// Delete key-value pairs
+// Delete Key-Value pairs
 func (data dataStore) del(keys []string) {
 	for _, key := range keys {
 		delete(data, key)
